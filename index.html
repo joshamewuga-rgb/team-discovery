@@ -85,6 +85,10 @@ body.host .plist{max-height:none}
 .row>button{flex:1}
 .drawer select{width:100%;background:rgba(255,255,255,.08);color:var(--ink);border:0;border-radius:10px;padding:10px 12px}
 .drawer input[type=range]{width:100%;accent-color:var(--yellow)}
+.fpick{display:flex;gap:9px;align-items:flex-start;font-size:12px;color:var(--ink-dim);padding:6px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)}
+.fpick input{margin-top:2px;flex:none;accent-color:var(--yellow)}
+.fpick b{color:var(--ink);font-weight:600;display:block}
+.fpick em{font-style:normal;display:block;opacity:.75;margin-top:1px;line-height:1.35}
 .drawer .close{position:absolute;top:14px;right:14px;width:34px;height:34px;padding:0;border-radius:50%}
 .plist{max-height:200px;overflow:auto;font-size:13px;margin-top:6px}
 .plist div{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);color:var(--ink-dim)}
@@ -277,7 +281,14 @@ const FACTS=[
  {tag:'Night shift, tight ship',e:'\u2708\uFE0F',t:'While you sleep, DHL\u2019s network of around 300 aircraft criss-crosses the planet so that \u201Cnext day\u201D actually means next day.',s:'Like a red-eye flight, but with zero crying babies and a 9am promise to keep.'},
  {tag:'Team on tour',e:'\U0001F3B8',t:'DHL tours with Coldplay, moving hundreds of tonnes of stage and lights across continents \u2014 with a push to do it more sustainably.',s:'Somewhere there\u2019s a waybill that says \u201Cone (1) giant glowing planet\u201D. Somebody signed for it.'},
  {tag:'Made of colleagues',e:'\U0001F3C6',t:'DHL has repeatedly ranked among the very best workplaces on Earth in the Great Place to Work list \u2014 voted by the people who actually work here.',s:'That\u2019s you. Well done, you.'}
-];
+,
+ {tag:'What makes teams work',e:'\u{1F6E1}\uFE0F',t:'Google studied 180 of its own teams to find what makes them great. The winner was not talent \u2014 it was <b>psychological safety</b>: feeling safe to ask questions, admit mistakes and disagree.',s:'The best teams are not the ones that never look silly \u2014 they are the ones where looking silly is allowed.'},
+ {tag:'The two-pizza rule',e:'\u{1F355}',t:'Amazon runs on the \u201Ctwo-pizza rule\u201D: if a team cannot be fed by two pizzas, it is too big to move fast.',s:'Small teams, clear owners \u2014 and, ideally, pizza.'},
+ {tag:'Why small teams win',e:'\u{1F9F2}',t:'The Ringelmann effect: in tug-of-war experiments, the bigger the team, the less hard each person pulls. Effort hides in a crowd.',s:'In a small team everyone knows their pull matters. That is the point of teams of four.'},
+ {tag:'Different beats similar',e:'\u{1F9E9}',t:'Research keeps finding that diverse teams solve problems more accurately than similar ones \u2014 not because anyone is smarter, but because different backgrounds catch different blind spots.',s:'Which is exactly why today\u2019s teams are mixed on purpose.'},
+ {tag:'Storming is normal',e:'\u{1F32A}\uFE0F',t:'New teams move through Tuckman\u2019s stages: <b>forming, storming, norming, performing</b>. The awkward, slightly scratchy phase is not failure \u2014 it is step two of four.',s:'If your new team argues about the coffee run, congratulations: you are right on schedule.'},
+ {tag:'Speak up, land safely',e:'\u{1F6EC}',t:'Aviation transformed its safety record with Crew Resource Management: training every crew member \u2014 however junior \u2014 to speak up the moment something looks wrong.',s:'The best captains made it easy to be challenged. So do the best team leads.'},
+ {tag:'Talk between meetings',e:'\u{1F4AC}',t:'MIT researchers who tracked teams with sensor badges found the strongest predictor of performance was not what was said in meetings \u2014 it was the energy of the chats <b>between</b> them.',s:'Coffee-corner conversations are not a break from the work. They are the work.'}];
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const hashStr=str=>{let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;return h;};
 const pickBy=(arr,seed)=>arr[hashStr(seed)%arr.length];
@@ -509,7 +520,7 @@ function boot(m){mode=m;document.getElementById('stage').classList.remove('hidde
 
 /* ----- control wiring shared by the stage drawer and the host console ----- */
 function wireControls(dispatch){
-  const chSel=$('challenge');if(chSel){const row=chSel.closest('label')||chSel.parentElement;if(row)row.style.display='none';}
+  const chSel=$('challenge');if(chSel){chSel.style.display='none';const h=chSel.previousElementSibling;if(h&&h.tagName==='H3')h.style.display='none';}
   chSel.onchange=e=>dispatch('challenge',e.target.value);
   $('teamSize').onchange=e=>dispatch('teamSize',+e.target.value);
   $('viewSel').onchange=e=>dispatch('view',e.target.value);
@@ -630,7 +641,8 @@ function startStage(){
   }
 
   /* ----- facts feed: one card at a time on the left while people answer ----- */
-  const factOrder=(()=>{const a=FACTS.map((_,i)=>i);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;})();
+  const shuffleIdx=list=>{const a=list.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  let factOrder=shuffleIdx(FACTS.map((_,i)=>i));
   const FACT_MS=14000;
   let roomIdx=-1,factTick=0;
   function roomFacts(){
@@ -657,8 +669,10 @@ function startStage(){
   function nextFact(){const card=$('factCard');card.classList.remove('in');
     setTimeout(()=>{factTick++;const rf=roomFacts();let f;
       if(rf.length&&factTick%2===0){roomIdx=(roomIdx+1)%rf.length;const r=rf[roomIdx];f={tag:'THIS ROOM \u00B7 LIVE',e:r.e,t:r.t,s:'From your answers \u2014 totals only, never per person'};}
-      else{state.factIdx=(state.factIdx+1)%factOrder.length;f=FACTS[factOrder[state.factIdx]];}
-      card.innerHTML=`<div class="kind"><i></i>${f.tag}</div><div class="emo">${f.e}</div><p>${f.t}</p><div class="src">${f.s}</div><div class="prog"><i id="factProg"></i></div>`;
+      else if(factOrder.length){state.factIdx=(state.factIdx+1)%factOrder.length;f=FACTS[factOrder[state.factIdx]];}
+      else if(rf.length){roomIdx=(roomIdx+1)%rf.length;const r=rf[roomIdx];f={e:r.e,t:r.t,s:'From your answers \u2014 totals only, never per person'};}
+      else f={e:'\u{1F4E1}',t:'Waiting for answers to roll in\u2026',s:'Facts appear here as the room fills up'};
+      card.innerHTML=`<div class="emo">${f.e}</div><p>${f.t}</p><div class="src">${f.s}</div><div class="prog"><i id="factProg"></i></div>`;
       card.classList.add('in');const bar=$('factProg');requestAnimationFrame(()=>{bar.style.transition=`width ${FACT_MS-700}ms linear`;bar.style.width='100%';});},650);}
   function factsVisible(){return state.showFacts&&!state.reveal;}
   nextFact();setInterval(()=>{if(factsVisible())nextFact();},FACT_MS);
@@ -1199,7 +1213,8 @@ function startStage(){
     remove:id=>{const p=state.participants.get(id);if(!p)return;state.participants.delete(id);state.nodes.delete(id);state.seatOf.delete(id);
       state.teams.forEach(t2=>t2.members=t2.members.filter(m=>m!==id));state.teams=state.teams.filter(t2=>t2.members.length>0);
       if(p.token)send('kicked',{token:p.token});state.dirty=true;recompute(true);broadcastAvatars();refreshList();toast(`${p.avatar} ${p.name} removed`);},
-    fullscreen:()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
+    fullscreen:()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();},
+    factsSet:arr=>{if(!Array.isArray(arr))return;const ok=arr.filter(x=>Number.isInteger(x)&&x>=0&&x<FACTS.length);factOrder=shuffleIdx(ok);state.factIdx=0;toast(ok.length===FACTS.length?'All fun facts on':`Fun facts on stage: ${ok.length} of ${FACTS.length}`);}
   };
   wireControls((name,arg)=>actions[name]&&actions[name](arg));
   function status(){return {view:state.view==='plane'&&PL.top2d?'plane2d':state.view,phase:state.phase,joined:state.participants.size,simPaused:state.simPaused,showStats:state.showStats,showFacts:state.showFacts,teamSize:state.teamSize,challenge:state.challenge?Object.keys(CHALLENGES).find(k=>CHALLENGES[k]===state.challenge):'',
@@ -1245,8 +1260,24 @@ function startHost(){
   let seen=false,lastSeen=0;
   wireControls((name,arg)=>{if(name==='fullscreen'){$('hstat').textContent='Full screen has to be pressed on the stage itself: click the stage window and press F.';$('hstat').classList.remove('hidden');return;}send('cmd',{name,arg});});
   $('btnHost').style.display='inline-block';$('btnHost').textContent='Open stage window';$('btnHost').onclick=()=>window.open(location.href.split('#')[0]+'#stage&room='+roomCode,'_blank');
+  /* ----- fun-fact picker: tick which facts the stage may show ----- */
+  const FKEY='dtd-facts-'+roomCode;
+  const fp=document.createElement('div');fp.id='factPick';
+  fp.innerHTML='<h3>Fun facts on stage</h3><div class="sub" style="margin:0 0 6px">Tick the facts the stage may show. \u201CThis room\u201D answer facts always run.</div>'+
+    FACTS.map((f,i)=>`<label class="fpick"><input type="checkbox" data-i="${i}"><span>${f.e} <b>${f.tag}</b><em>${f.t.replace(/<[^>]+>/g,'')}</em></span></label>`).join('')+
+    '<div class="row" style="margin-top:8px"><button id="fpAll">All on</button><button id="fpNone">All off</button></div>';
+  $('drawer').appendChild(fp);
+  const boxes=[...fp.querySelectorAll('input[type=checkbox]')];
+  let saved=null;try{saved=JSON.parse(localStorage.getItem(FKEY)||'null');}catch(e){}
+  const savedSet=Array.isArray(saved)?new Set(saved):null;
+  boxes.forEach(b=>{b.checked=savedSet?savedSet.has(+b.dataset.i):true;});
+  const selFacts=()=>boxes.filter(b=>b.checked).map(b=>+b.dataset.i);
+  const sendFacts=()=>{const s=selFacts();try{localStorage.setItem(FKEY,JSON.stringify(s));}catch(e){}send('cmd',{name:'factsSet',arg:s});};
+  fp.addEventListener('change',sendFacts);
+  $('fpAll').onclick=()=>{boxes.forEach(b=>b.checked=true);sendFacts();};
+  $('fpNone').onclick=()=>{boxes.forEach(b=>b.checked=false);sendFacts();};
   $('btnFull').textContent='Full screen (press F on the stage)';
-  bus.addEventListener('message',ev=>{const m=ev.data;if(!m||m.type!=='status')return;seen=true;lastSeen=Date.now();$('hstat').classList.add('hidden');renderStatus(m);});
+  bus.addEventListener('message',ev=>{const m=ev.data;if(!m||m.type!=='status')return;const first=!seen||Date.now()-lastSeen>3500;seen=true;lastSeen=Date.now();$('hstat').classList.add('hidden');renderStatus(m);if(first)sendFacts();});
   send('host-hello',{});setInterval(()=>{if(!seen||Date.now()-lastSeen>3500){$('hstat').textContent='Looking for the stage… press “Open stage window” below (or open the app elsewhere and choose Stage), and keep that window open.';$('hstat').classList.remove('hidden');send('host-hello',{});}},2000);
 }
 
