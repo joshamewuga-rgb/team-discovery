@@ -516,6 +516,10 @@ const QUESTIONS=[
  {sec:'Guessing game',id:'guessDist',type:'pick',guess:'dist',q:'How far apart did the two furthest-apart people here grow up?',sub:'Roughly. Half the planet is about 20,000 km.',o:['Under 5,000 km','5,000 \u2013 10,000 km','10,000 \u2013 15,000 km','More than 15,000 km'],hi:[4999,9999,14999,Infinity]}
 ];
 const QIDX=new Map(QUESTIONS.map((q,i)=>[q.id,i]));
+/* A question that was asked but not answered. Must be a real value: the relay
+   deletes null fields, so a null skip never arrives at the stage. */
+const SKIP='\u2205';
+const isSkip=v=>v===SKIP||v===null||v===undefined;
 /* Which ground-truth question each guessing question needs in order to be scored. */
 const GUESS_NEEDS={langs:'langs',roots:'roots',conts:'roots',dist:'roots',based:'based',years:'years'};
 /* The facilitator picks which questions get asked. This is the default short set. */
@@ -569,12 +573,12 @@ const hashStr=str=>{let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(
 const pickBy=(arr,seed)=>arr[hashStr(seed)%arr.length];
 /** Passport profile from answers ([{q:id,v}]). */
 function buildProfile(p){
-  const A={};for(const a of p.answers)A[a.q]=a.v;
+  const A={};for(const a of p.answers)if(!isSkip(a.v))A[a.q]=a.v;
   const picks={};for(const k of PICK_IDS)if(A[k]!=null)picks[k]=A[k];
   const langs=Array.isArray(A.langs)?A.langs:[];
   const hobbies=Array.isArray(A.hobbies)?A.hobbies:[];
   const years=(typeof A.years==='number'&&isFinite(A.years))?A.years:null;
-  const count=p.answers.filter(a=>a.v!=null&&a.v!=='').length;
+  const count=p.answers.filter(a=>!isSkip(a.v)&&a.v!=='').length;
   const need=Math.max(1,activeCount());
   return {id:p.id,roots:A.roots||null,based:A.based||null,dream:A.dream||null,langs,hobbies,years,picks,count,conf:Math.min(1,count/need),done:count>=need};
 }
@@ -904,7 +908,7 @@ function startStage(){
     broadcastAvatars();state.dirty=true;refreshList();return p;
   }
   function validAnswer(qid,v){const q=QUESTIONS[QIDX.get(qid)];if(!q)return false;
-    if(v===null)return true; /* ran out of time — counts as asked, contributes nothing */
+    if(isSkip(v))return true; /* ran out of time — counts as asked, contributes nothing */
     if(q.type==='pick')return Number.isInteger(v)&&v>=0&&v<q.o.length;
     if(q.type==='pickother')return (Number.isInteger(v)&&v>=0&&v<q.o.length)||(typeof v==='string'&&v.trim().length>0&&v.length<=40);
     if(q.type==='country')return typeof v==='string'&&/^[A-Z]{2}$/.test(v);
@@ -914,6 +918,7 @@ function startStage(){
     return false;}
   function recordAnswer(p,qid,v,quiet){
     if(state.phase==='revealed')return false;
+    if(isSkip(v))v=SKIP; /* normalise however the relay delivered it */
     if(!validAnswer(qid,v))return false;
     if(p.answers.some(a=>a.q===qid))return false;
     if(Array.isArray(v))v=v.slice(0,20).map(x=>String(x).slice(0,30));
@@ -925,7 +930,7 @@ function startStage(){
   }
   /* ----- live answer balloons: anonymous, transient, purely for the room's delight ----- */
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  function answerText(qid,v){const q=QUESTIONS[QIDX.get(qid)];if(!q||v==null)return null;
+  function answerText(qid,v){const q=QUESTIONS[QIDX.get(qid)];if(!q||isSkip(v))return null;
     if(q.guess)return null;
     const strip=t=>String(t).split(' \u2014 ')[0];
     if(q.type==='pick')return q.o[v]?esc(strip(q.o[v])):null;
@@ -985,7 +990,7 @@ function startStage(){
     const all=[...state.participants.values()];
     const need=Math.max(1,activeCount());const joined=all.length,done=all.filter(p=>p.answers.length>=need).length,ans=all.reduce((a,p)=>a+p.answers.length,0);
     const links=state.pairs.length,teams=state.teams.filter(t=>t.members.length>=2&&t.score>=0.26).length;
-    const meanConf=joined?all.reduce((a,p)=>a+Math.min(1,p.answers.length/need),0)/joined:0;
+    const meanConf=joined?all.reduce((a,p)=>a+Math.min(1,p.answers.filter(x=>!isSkip(x.v)).length/need),0)/joined:0;
     const stability=joined?1-Math.min(1,state.moves.length/joined):0;
     const conf=joined?0.6*meanConf+0.4*stability:0;
     $('sJoined').textContent=joined;$('sDone').textContent=done;$('sAns').textContent=ans;$('sLinks').textContent=links;$('sTeams').textContent=teams;
@@ -999,8 +1004,8 @@ function startStage(){
   const FACT_MS=14000;
   let roomIdx=-1,factTick=0;
   function roomFacts(){
-    const ps=[...state.participants.values()];const MIN=5;
-    const val=id=>ps.map(p=>{const a=p.answers.find(x=>x.q===id);return a?a.v:null;}).filter(v=>v!=null&&v!=='');
+    const ps=[...state.participants.values()];const MIN=Math.min(3,Math.max(1,ps.length));
+    const val=id=>ps.map(p=>{const a=p.answers.find(x=>x.q===id);return a?a.v:null;}).filter(v=>!isSkip(v)&&v!=='');
     const out=[];
     const bare=t=>String(t).replace(/^\S+\s/,'');
     const L=val('langs');const langSet=new Set();L.forEach(l=>l.forEach(x=>langSet.add(x)));
@@ -1801,7 +1806,7 @@ function startParticipant(){
         `<h2>${q.q}</h2>${q.sub?`<p class="lead">${q.sub}</p>`:''}`+
         `<div class="qtime" id="qtime" style="display:none"><div class="tb"><i id="qtbar"></i></div><span id="qtnum"></span></div>`;
       const submit=v=>{clearTimer();P._tkey=null;P._tend=0;P.answers.push({q:q.id,v});persist();if(P.connected)send('answer',{token,q:q.id,v});nextStep();};
-      let onTimeout=()=>submit(null);
+      let onTimeout=()=>submit(SKIP);
       if(q.type==='pick'){body.innerHTML=head+q.o.map((o,i)=>`<button data-o="${i}">${o}</button>`).join('')+linkNote();
         body.querySelectorAll('button[data-o]').forEach(b=>b.onclick=()=>submit(+b.dataset.o));}
       else if(q.type==='pickother'){
@@ -1812,14 +1817,14 @@ function startParticipant(){
         $('othBtn').onclick=()=>{$('othBtn').style.display='none';$('othWrap').style.display='block';$('othIn').focus();};
         $('othGo').onclick=()=>{const v=$('othIn').value.trim().slice(0,40);if(!v){$('othIn').focus();return;}submit(v);};
         $('othIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('othGo').click();}};
-        onTimeout=()=>{const w=$('othWrap');const t=(w&&w.style.display!=='none'&&$('othIn'))?$('othIn').value.trim().slice(0,40):'';submit(t||null);};}
+        onTimeout=()=>{const w=$('othWrap');const t=(w&&w.style.display!=='none'&&$('othIn'))?$('othIn').value.trim().slice(0,40):'';submit(t||SKIP);};}
       else if(q.type==='country'){body.innerHTML=head+`<input type="text" id="csearch" placeholder="Type to search\u2026" autocomplete="off"><div class="clist" id="clist"></div>`;
         const list=$('clist'),inp=$('csearch');
         const draw=f=>{const ff=f.trim().toLowerCase();const rows=COUNTRIES.filter(c=>!ff||c.n.toLowerCase().includes(ff)).slice(0,ff?40:300);
           list.innerHTML=rows.map(c=>`<button data-c="${c.c}"><em>${flagOf(c.c)}</em>${c.n}</button>`).join('')||'<p class="lead" style="padding:12px">No match \u2014 try another spelling.</p>';
           list.querySelectorAll('button').forEach(b=>b.onclick=()=>submit(b.dataset.c));};
         inp.oninput=()=>draw(inp.value);draw('');inp.focus();
-        onTimeout=()=>submit(null);}
+        onTimeout=()=>submit(SKIP);}
       else if(q.type==='multi'){if(!P.multiSel)P.multiSel=[];
         body.innerHTML=head+`<div class="chips" id="chips"></div>`+
           (q.add?`<div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="addx" placeholder="${eq(q.add)}\u2026" style="flex:1;margin:0" maxlength="30" autocomplete="off"><button id="addBtn" style="width:auto;margin:0;padding:0 18px">Add</button></div>`:'')+
@@ -1832,7 +1837,7 @@ function startParticipant(){
         if(q.add){$('addBtn').onclick=()=>{const v=$('addx').value.trim().slice(0,30);if(v&&!P.multiSel.includes(v)&&P.multiSel.length<20){P.multiSel.push(v);$('addx').value='';drawChips();}};
           $('addx').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('addBtn').click();}};}
         $('multiDone').onclick=()=>{if(!P.multiSel.length){P.notice='Pick at least one to carry on.';render();return;}const v=P.multiSel.slice();P.multiSel=null;submit(v);};
-        onTimeout=()=>{const v=(P.multiSel&&P.multiSel.length)?P.multiSel.slice():null;P.multiSel=null;submit(v);};}
+        onTimeout=()=>{const v=(P.multiSel&&P.multiSel.length)?P.multiSel.slice():SKIP;P.multiSel=null;submit(v);};}
       else if(q.type==='text'){
         body.innerHTML=head+`<input type="text" id="tin" maxlength="140" placeholder="${eq(q.ph||'Type your answer')}" autocomplete="off"><button class="primary" id="tGo">Continue</button><button class="skip" id="tSkip">Skip this one</button>`;
         const inp=$('tin');inp.focus();inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('tGo').click();}};
@@ -1842,7 +1847,7 @@ function startParticipant(){
       else if(q.type==='years'){body.innerHTML=head+`<input type="number" id="yrs" min="0" max="50" step="0.5" placeholder="e.g. 7" inputmode="decimal"><button class="primary" id="yrsGo">Continue</button>`;
         const inp=$('yrs');inp.focus();inp.onkeydown=e=>{if(e.key==='Enter')$('yrsGo').click();};
         $('yrsGo').onclick=()=>{const v=parseFloat(inp.value);if(!isFinite(v)||v<0||v>50){P.notice='A number between 0 and 50, please.';render();return;}submit(Math.round(v*2)/2);};
-        onTimeout=()=>{const v=parseFloat(inp.value);submit(isFinite(v)&&v>=0&&v<=50?Math.round(v*2)/2:null);};}
+        onTimeout=()=>{const v=parseFloat(inp.value);submit(isFinite(v)&&v>=0&&v<=50?Math.round(v*2)/2:SKIP);};}
       armTimer(q,qlist.length,()=>onTimeout());}
     else if(P.step==='done'){body.innerHTML=`<div class="bigav">${P.avatar}</div><h2>That's everything, ${P.name}.</h2><p class="lead">Watch the big screen — the room's story is building up there. Your team and matches appear here at the reveal.</p>${linkNote()}<button id="restart" style="margin-top:24px;text-align:center;color:var(--text-dim)">Start over on this device</button>`;
       $('restart').onclick=()=>{if(confirm('Clear your avatar, name and answers on this device?')){localStorage.removeItem(KEY);localStorage.removeItem('dtd-token-'+roomCode);location.reload();}};}
@@ -1856,16 +1861,18 @@ function startParticipant(){
     if(typeof m.qsec==='number'&&m.qsec!==P.qsec){P.qsec=m.qsec;persist();if(P.step==='question')render();}
     if(m.type==='avatars'){P.taken=m.taken.filter(a=>a!==P.avatar);if(P.step==='avatar')render();}
     else if(m.type==='state'&&m.token===token){const first=!P.connected;P.connected=true;P.phase=m.phase;P.taken=m.taken.filter(a=>a!==P.avatar);if(P.joined)sync(false);else if(first)render();}
-    else if(m.type==='synced'&&m.token===token){if(m.changed){P.notice=`Your avatar was already taken on the big screen, so you're now ${m.avatar}.`;P.avatar=m.avatar;persist();}P.phase=m.phase;nextStep();}
+    else if(m.type==='synced'&&m.token===token){if(m.changed){P.notice=`Your avatar was already taken on the big screen, so you're now ${m.avatar}.`;P.avatar=m.avatar;persist();}P.phase=m.phase;P.onStage=m.answered;nextStep();}
     else if(m.type==='avatar-taken'&&m.token===token){P.avatar=null;P.joined=false;P.notice='That avatar was just taken — choose another.';P.step='avatar';persist();render();}
     else if(m.type==='resync'&&m.token===token){sync(false);}
-    else if(m.type==='ack'&&m.token===token){P.phase=m.phase;}
+    else if(m.type==='ack'&&m.token===token){P.phase=m.phase;P.onStage=m.answered;if(m.accepted===false)sync(false);}
     else if(m.type==='phase'){P.phase=m.phase;}
     else if(m.type==='results'&&m.token===token){P.results=m.results;nextStep();}
     else if(m.type==='kicked'&&m.token===token){localStorage.removeItem(KEY);P.step='removed';render();}
   });
   nextStep();send('hello',{token});
   setInterval(()=>{if(!P.connected)send('hello',{token});},2000);
+  /* the stage should hold exactly what this phone holds — if it drifts, resend the lot */
+  setInterval(()=>{if(P.connected&&P.joined&&typeof P.onStage==='number'&&P.onStage<P.answers.length)sync(false);},6000);
 }
 
 /* ---------------------------- ENTRY ---------------------------- */
