@@ -74,9 +74,30 @@ body.photo .stats{background:linear-gradient(180deg,rgba(8,14,22,0) 0%,rgba(8,14
 .hstat{font-size:13px;background:rgba(255,204,0,.12);color:var(--yellow);border:1px solid rgba(255,204,0,.3);border-radius:10px;padding:10px 12px;margin-bottom:14px;line-height:1.45}
 /* host console: the drawer becomes the whole page */
 body.host #canvas,body.host .brand,body.host .room,body.host .chip,body.host .banner,body.host .toast,body.host .stats,body.host .reveal,body.host .gear,body.host .close,body.host #hostTip,body.host #btnHost{display:none}
-body.host .drawer{position:static;transform:none;width:min(560px,100%);margin:0 auto;border:0;background:transparent;backdrop-filter:none;padding:28px 22px 40px}
+html.host,body.host{overflow:auto;height:auto;min-height:100%;position:static}
+body.host .drawer{position:fixed;top:0;right:0;bottom:0;left:0;width:auto;max-width:none;transform:none;margin:0;border:0;background:var(--stage);backdrop-filter:none;padding:26px 20px 90px;height:auto;overflow-y:scroll;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:20}
+body.host .drawer>*{max-width:560px;margin-left:auto;margin-right:auto}
+#factPick>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);background:rgba(255,204,0,.10);border:1px solid rgba(255,204,0,.28);border-radius:10px;padding:11px 13px;margin:0}
+#factPick>summary::-webkit-details-marker{display:none}
+#factPick>summary:after{content:'\25BE';margin-left:auto;opacity:.6}
+#factPick[open]>summary:after{content:'\25B4'}
+#factPick>summary b{color:var(--yellow);font-weight:600}
+#factPick .fpbody,#qPick .fpbody{padding:10px 2px 4px}
+#qPick>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);background:rgba(255,204,0,.10);border:1px solid rgba(255,204,0,.28);border-radius:10px;padding:11px 13px;margin:0}
+#qPick>summary::-webkit-details-marker{display:none}
+#qPick>summary:after{content:'\25BE';margin-left:auto;opacity:.6}
+#qPick[open]>summary:after{content:'\25B4'}
+#qPick>summary b{color:var(--yellow);font-weight:600}
+.starthere{margin:10px 0 4px;padding:10px 12px;border-radius:10px;background:rgba(255,204,0,.10);border:1px solid rgba(255,204,0,.30)}
+.starthere b{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--yellow);margin-bottom:5px}
+.starthere ul{margin:0;padding-left:17px}
+.starthere li{margin:3px 0;line-height:1.45}
+.pbody .starthere{background:#FFF8DC;border-color:#E8D48A}
+.pbody .starthere b{color:#8a6b00}
+.qsec{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--yellow);opacity:.85;margin:12px 0 2px;font-weight:600}
+.fpick input:disabled+span{opacity:.45}
 body.host .plist{max-height:none}
-.drawer{position:absolute;top:0;right:0;bottom:0;width:340px;background:rgba(21,29,39,.94);backdrop-filter:blur(14px);border-left:1px solid rgba(255,255,255,.06);transform:translateX(100%);transition:transform .45s var(--ease);padding:22px;overflow:auto;z-index:5}
+.drawer{position:absolute;top:0;right:0;bottom:0;width:340px;background:rgba(21,29,39,.94);backdrop-filter:blur(14px);border-left:1px solid rgba(255,255,255,.06);transform:translateX(100%);transition:transform .45s var(--ease);padding:22px 22px 60px;overflow-y:scroll;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:5}
 .drawer.open{transform:none}
 .drawer h2{font-size:15px;margin:0 0 4px;font-weight:600}
 .drawer .sub{font-size:12px;color:var(--ink-dim);margin-bottom:18px}
@@ -156,7 +177,19 @@ body.host .plist{max-height:none}
 .clist button{border:none;border-bottom:1px solid #EFEEE8;border-radius:0;margin:0;text-align:left;display:flex;align-items:center;gap:12px;padding:12px 14px}
 .clist button em{font-style:normal;font-size:22px}
 .prog{display:flex;align-items:center;gap:12px;margin-bottom:22px;color:var(--text-dim);font-size:14px}
-.prog .pd{display:flex;gap:5px}.prog .pd i{width:8px;height:8px;border-radius:50%;background:#DDDCD4}.prog .pd i.on{background:#1B1F24}
+.prog .pd{flex:1;height:6px;border-radius:3px;background:#DDDCD4;overflow:hidden}
+.prog .pd i{display:block;height:100%;width:0;background:#1B1F24;border-radius:3px;transition:width .4s cubic-bezier(.2,.7,.2,1)}
+.secl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8A867A;font-weight:600;margin:0 0 8px}
+.secl.game{color:#8a6b00}
+.qtime{display:flex;align-items:center;gap:10px;margin:-12px 0 18px}
+.qtime .tb{flex:1;height:4px;border-radius:2px;background:#E6E4DC;overflow:hidden}
+.qtime .tb i{display:block;height:100%;width:100%;background:#1B1F24;border-radius:2px}
+.qtime span{font-size:13px;color:var(--text-dim);font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.qtime.warn .tb i{background:#B3000C}
+.qtime.warn span{color:#B3000C;font-weight:600}
+.pace{display:block;font-size:12px;color:var(--ink-dim);margin-top:10px}
+.pace select{margin-top:5px}
+.skip{text-align:center!important;color:var(--text-dim);border-color:transparent!important;background:transparent!important;font-size:15px!important;min-height:0!important;padding:10px!important;margin-top:2px!important}
 .prog em{font-size:28px;font-style:normal}
 .bigav{font-size:96px;text-align:center;margin:20px 0 6px;animation:breathe 3s ease-in-out infinite}
 @keyframes breathe{50%{transform:scale(1.04)}}
@@ -234,8 +267,9 @@ body.host .plist{max-height:none}
     <div class="row" style="margin-top:8px"><button id="btnHost">Open control window</button><button id="btnParticipant">Open participant view</button></div>
     <div class="row" style="margin-top:8px"><button id="btnCopyLink">Copy join link</button></div>
     <div class="row" style="margin-top:8px"><button id="btnFull">Full screen</button><button id="btnFacts">Hide facts</button></div>
+    <label class="pace">Time per question <select id="qsecSel"><option value="0">Off — no timer</option><option value="20">20 seconds</option><option value="30" selected>30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option></select></label>
     <p class="tip" id="hostTip">Keep the control window on your own screen and share only the stage window.</p>
-    <h3>Simulated participants</h3>
+    <h3 id="hSim">Simulated participants</h3>
     <div class="row"><button id="sim10">Add 10</button><button id="sim30">Add 30</button><button id="sim60">Add 60</button></div>
     <div class="row" style="margin-top:8px"><button id="simPause">Pause answering</button></div>
     <label style="font-size:12px;color:var(--ink-dim);display:block;margin-top:12px">Answering speed <input type="range" id="simSpeed" min="1" max="10" value="4"></label>
@@ -247,7 +281,7 @@ body.host .plist{max-height:none}
     <select id="challenge"><option value="">None — general collaboration</option></select>
     <h3>Reveal</h3>
     <div class="row"><button class="primary" id="btnReveal">Reveal teams</button><button class="danger" id="btnReset">Reset</button></div>
-    <h3>Participants</h3>
+    <h3 id="hPart">Participants</h3>
     <div class="plist" id="plist"></div>
     <p class="tip" style="margin-top:18px">Answers are never shown here or on the stage. On the stage window: <span class="kbd">S</span> opens this panel, <span class="kbd">F</span> is full screen, <span class="kbd">R</span> reveals, <span class="kbd">Esc</span> closes the panel.</p>
   </aside>
@@ -270,19 +304,75 @@ let _regionNames=null;try{_regionNames=new Intl.DisplayNames(['en'],{type:'regio
 const countryName=c=>{try{return (_regionNames&&_regionNames.of(c))||c;}catch(e){return c;}};
 const COUNTRIES=COUNTRY_CODES.map(c=>({c,n:countryName(c)})).sort((a,b)=>a.n.localeCompare(b.n));
 const LANGS=['English','French','Dutch','German','Spanish','Portuguese','Italian','Arabic','Mandarin','Cantonese','Hindi','Urdu','Tamil','Swahili','Turkish','Polish','Romanian','Russian','Ukrainian','Greek','Tagalog','Japanese','Korean'];
+const HOBBY_OPTS=['\u{1F4DA} Reading','\u{1F373} Cooking','\u{1F3A7} Music','\u26BD Football','\u{1F3C3} Running','\u{1F3AE} Gaming','\u{1F4F7} Photography','\u{1F331} Gardening','\u2708\uFE0F Travel','\u{1F3AC} Films & series','\u{1F483} Dancing','\u{1F3A8} Art & drawing','\u{1F6B4} Cycling','\u{1F97E} Hiking','\u{1F3CA} Swimming','\u{1F3B2} Board games','\u{1F399}\uFE0F Podcasts','\u{1F64C} Volunteering','\u{1F415} Pets','\u{1F3A3} Fishing','\u{1F9D8} Yoga','\u{1F6E0}\uFE0F DIY'];
+const ROLE_OPTS=['\u{1F4CA} Business Analyst','\u{1F5C2}\uFE0F Program Manager','\u{1F3AF} Director','\u{1F396}\uFE0F VP','\u{1F9ED} Consultant'];
+const TALENT_OPTS=['\u{1F3B5} Music \u2014 playing or singing','\u{1F370} Cooking or baking','\u{1F3C5} Sport or coaching','\u{1F3A8} Art, design or crafts','\u{1F6E0}\uFE0F Fixing and building things','\u{1F4F7} Photography or video','\u270D\uFE0F Writing or storytelling','\u{1F3A4} Performing \u2014 stage, comedy, MC'];
+const GREAT_OPTS=['\u{1F91D} Trust and openness','\u{1F44F} Recognition for good work','\u{1F4C8} Room to learn and grow','\u{1F604} Humour and a bit of fun','\u{1F9ED} Clear direction','\u{1F54A}\uFE0F Flexibility and balance','\u{1F442} Being properly listened to'];
+/* ---- geography: continent per country, plus rough centroids for the "how far apart" fact ---- */
+const CONT_STR={
+ AF:'DZ AO BJ BW BF BI CM CV CF TD KM CD CG CI DJ EG GQ ER SZ ET GA GM GH GN GW KE LS LR LY MG MW ML MR MU MA MZ NA NE NG RW ST SN SC SL SO ZA SS SD TZ TG TN UG ZM ZW',
+ EU:'AL AD AT BY BE BA BG HR CY CZ DK EE FI FR DE GR HU IS IE IT XK LV LI LT LU MT MD MC ME NL MK NO PL PT RO RU SM RS SK SI ES SE CH UA GB VA',
+ AS:'AF AM AZ BH BD BT BN KH CN GE HK IN ID IR IQ IL JP JO KZ KW KG LA LB MY MV MN MM NP KP OM PK PS PH QA SA SG KR LK SY TW TJ TH TL TR TM AE UZ VN YE',
+ NA:'AG BS BB BZ CA CR CU DM DO SV GD GT HT HN JM MX NI PA KN LC VC TT US',
+ SA:'AR BO BR CL CO EC GY PY PE SR UY VE',
+ OC:'AU FJ KI MH FM NR NZ PW PG WS SB TO TV VU NC'};
+const CONT_OF={};for(const k in CONT_STR)for(const c of CONT_STR[k].split(' '))if(!CONT_OF[c])CONT_OF[c]=k;
+const CONT_NAME={AF:'Africa',EU:'Europe',AS:'Asia',NA:'North America',SA:'South America',OC:'Oceania'};
+const CENTROID_STR='DZ:28.0,1.7 AO:-11.2,17.9 BJ:9.3,2.3 BW:-22.3,24.7 BF:12.2,-1.6 BI:-3.4,29.9 CM:7.4,12.4 CV:16.0,-24.0 CF:6.6,20.9 TD:15.5,18.7 KM:-11.9,43.9 CD:-4.0,21.8 CG:-0.2,15.8 CI:7.5,-5.5 DJ:11.8,42.6 EG:26.8,30.8 GQ:1.7,10.3 ER:15.2,39.8 SZ:-26.5,31.5 ET:9.1,40.5 GA:-0.8,11.6 GM:13.4,-15.3 GH:7.9,-1.0 GN:9.9,-9.7 GW:11.8,-15.2 KE:0.0,37.9 LS:-29.6,28.2 LR:6.4,-9.4 LY:26.3,17.2 MG:-18.8,46.9 MW:-13.3,34.3 ML:17.6,-4.0 MR:21.0,-10.9 MU:-20.3,57.6 MA:31.8,-7.1 MZ:-18.7,35.5 NA:-22.9,18.5 NE:17.6,8.1 NG:9.1,8.7 RW:-1.9,29.9 ST:0.2,6.6 SN:14.5,-14.5 SC:-4.7,55.5 SL:8.5,-11.8 SO:5.2,46.2 ZA:-30.6,22.9 SS:6.9,31.3 SD:12.9,30.2 TZ:-6.4,34.9 TG:8.6,0.8 TN:33.9,9.5 UG:1.4,32.3 ZM:-13.1,27.8 ZW:-19.0,29.2 AL:41.2,20.2 AT:47.5,14.6 BY:53.7,28.0 BE:50.5,4.5 BA:43.9,17.7 BG:42.7,25.5 HR:45.1,15.2 CY:35.1,33.4 CZ:49.8,15.5 DK:56.3,9.5 EE:58.6,25.0 FI:61.9,25.7 FR:46.2,2.2 DE:51.2,10.5 GR:39.1,21.8 HU:47.2,19.5 IS:65.0,-19.0 IE:53.4,-8.2 IT:41.9,12.6 LV:56.9,24.6 LT:55.2,23.9 LU:49.8,6.1 MT:35.9,14.4 MD:47.4,28.4 ME:42.7,19.4 NL:52.1,5.3 MK:41.6,21.7 NO:60.5,8.5 PL:51.9,19.1 PT:39.4,-8.2 RO:45.9,25.0 RU:61.5,105.3 RS:44.0,21.0 SK:48.7,19.7 SI:46.2,15.0 ES:40.5,-3.7 SE:60.1,18.6 CH:46.8,8.2 UA:48.4,31.2 GB:55.4,-3.4 AF:33.9,67.7 AM:40.1,45.0 AZ:40.1,47.6 BH:26.0,50.6 BD:23.7,90.4 BT:27.5,90.4 BN:4.5,114.7 KH:12.6,105.0 CN:35.9,104.2 GE:42.3,43.4 HK:22.4,114.1 IN:20.6,79.0 ID:-0.8,113.9 IR:32.4,53.7 IQ:33.2,43.7 IL:31.0,34.9 JP:36.2,138.3 JO:30.6,36.2 KZ:48.0,66.9 KW:29.3,47.5 KG:41.2,74.8 LA:19.9,102.5 LB:33.9,35.9 MY:4.2,102.0 MV:3.2,73.2 MN:46.9,103.8 MM:21.9,96.0 NP:28.4,84.1 OM:21.5,55.9 PK:30.4,69.3 PS:31.9,35.2 PH:12.9,121.8 QA:25.4,51.2 SA:23.9,45.1 SG:1.4,103.8 KR:35.9,127.8 LK:7.9,80.8 SY:34.8,39.0 TW:23.7,121.0 TJ:38.9,71.3 TH:15.9,101.0 TR:39.0,35.2 TM:39.0,59.6 AE:23.4,53.8 UZ:41.4,64.6 VN:14.1,108.3 YE:15.6,48.5 CA:56.1,-106.3 US:37.1,-95.7 MX:23.6,-102.6 CR:9.7,-83.8 CU:21.5,-77.8 DO:18.7,-70.2 GT:15.8,-90.2 HT:19.0,-72.3 HN:15.2,-86.2 JM:18.1,-77.3 NI:12.9,-85.2 PA:8.5,-80.8 SV:13.8,-88.9 TT:10.7,-61.2 BS:25.0,-77.4 BB:13.2,-59.5 BZ:17.2,-88.5 AR:-38.4,-63.6 BO:-16.3,-63.6 BR:-14.2,-51.9 CL:-35.7,-71.5 CO:4.6,-74.3 EC:-1.8,-78.2 GY:4.9,-58.9 PY:-23.4,-58.4 PE:-9.2,-75.0 SR:3.9,-56.0 UY:-32.5,-55.8 VE:6.4,-66.6 AU:-25.3,133.8 NZ:-40.9,174.9 FJ:-17.7,178.1 PG:-6.3,144.0 SB:-9.6,160.2 VU:-15.4,167.0 WS:-13.8,-172.1 TO:-21.2,-175.2 NC:-20.9,165.6';
+const CENTROID={};for(const bit of CENTROID_STR.split(' ')){const [c,ll]=bit.split(':');const [a,b]=ll.split(',');CENTROID[c]=[+a,+b];}
+/** Great-circle distance in km between two country centroids, or null if unknown. */
+function countryDistance(a,b){const A=CENTROID[a],B=CENTROID[b];if(!A||!B)return null;
+  const R=6371,rad=Math.PI/180;const dLat=(B[0]-A[0])*rad,dLon=(B[1]-A[1])*rad;
+  const x=Math.sin(dLat/2)**2+Math.cos(A[0]*rad)*Math.cos(B[0]*rad)*Math.sin(dLon/2)**2;
+  return Math.round(2*R*Math.asin(Math.min(1,Math.sqrt(x))));}
+/** The two countries furthest apart in a list, with the distance. */
+function widestPair(codes){const list=[...new Set(codes)].filter(c=>CENTROID[c]);let best=null;
+  for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){const d=countryDistance(list[i],list[j]);
+    if(d!=null&&(!best||d>best.km))best={a:list[i],b:list[j],km:d};}
+  return best;}
 const QUESTIONS=[
- {id:'roots',type:'country',q:'Where are your roots?',sub:'The country you call home — or the one your family does.'},
- {id:'langs',type:'langs',q:'Which languages do you speak?',sub:'Tap all that apply. Add any that are missing — local languages very welcome.'},
- {id:'years',type:'years',q:'How many years at DHL?',sub:'Roughly is fine. Round up proudly.'},
- {id:'brew',type:'pick',q:'Fuel of choice?',o:['\u2615 Coffee','🍵 Tea','💧 Neither \u2014 pure willpower']},
- {id:'clock',type:'pick',q:'When does your brain switch on?',o:['🌅 Early bird','🦉 Night owl']},
- {id:'seat',type:'pick',q:'On a plane, you want\u2026',o:['🪟 Window','🚶 Aisle','😬 Middle (really)']},
- {id:'recharge',type:'pick',q:'How do you recharge after work?',o:['🏃 Moving \u2014 sport, gym, long walks','🍳 Making \u2014 cooking, DIY, garden','📺 Watching \u2014 series, football, films','📚 Quiet \u2014 books, music, peace','🎉 People \u2014 friends, family, out']},
- {id:'power',type:'pick',q:'Pick one work superpower',o:['🗣\uFE0F Speak every language','🌀 Teleport anywhere','\u23F8\uFE0F Pause time in meetings','🔮 Know where every parcel is']},
- {id:'pizza',type:'pick',q:'Pineapple on pizza?',o:['\u2705 Yes, obviously','\u274C Absolutely not','🤫 Only when nobody\u2019s watching']}
+ {sec:'Introductions',id:'role',type:'pickother',q:'What is your role?',sub:'Closest one is fine.',o:ROLE_OPTS,other:'Something else',bal:'Role'},
+ {sec:'Introductions',id:'based',type:'country',q:'Where are you based?',sub:'The country you work from.',bal:'Based in'},
+ {sec:'Introductions',id:'years',type:'years',q:'How long have you been with the company?',sub:'In years. Roughly is fine \u2014 round up proudly.'},
+ {sec:'Getting to know you',id:'roots',type:'country',q:'Where did you grow up?',sub:'The place that shaped you.',bal:'Grew up in'},
+ {sec:'Getting to know you',id:'langs',type:'multi',q:'Which languages do you speak?',sub:'Tap all that apply.',o:LANGS,add:'Add another language',bal:'Speaks'},
+ {sec:'Getting to know you',id:'outside',type:'pick',q:'What do you enjoy doing outside of work?',sub:'The main one.',o:['\u{1F6B4} Cycling','\u{1F3CB}\uFE0F Gym','\u2708\uFE0F Travelling','\u{1F97E} Hiking','\u{1F634} Sleeping','\u{1F3AF} Something else entirely']},
+ {sec:'Getting to know you',id:'hobbies',type:'multi',q:'Any hobbies or interests?',sub:'Pick as many as you like.',o:HOBBY_OPTS,add:'Add your own',bal:'Into'},
+ {sec:'Getting to know you',id:'secret',type:'text',q:"Something about you most people don't know?",sub:'Keep it short \u2014 and printable.',ph:'e.g. I once cycled across Iceland',bal:'Fun fact'},
+ {sec:'Getting to know you',id:'talent',type:'pickother',q:'A skill or talent you have outside work?',o:TALENT_OPTS,other:'Something else',bal:'Secret talent'},
+ {sec:'Work style',id:'projects',type:'pick',q:'How many projects are you involved in right now?',o:['1\uFE0F\u20E3 Just the one','2\uFE0F\u20E3 Two or three','4\uFE0F\u20E3 Four or five','\u{1F92F} Six or more']},
+ {sec:'Work style',id:'comms',type:'pick',q:'Your preferred way of communicating?',o:['\u{1F4AC} Teams','\u{1F4E7} Email','\u{1F4DE} A quick call','\u{1F4F1} Text / WhatsApp']},
+ {sec:'Icebreakers',id:'food',type:'text',q:"What's your favourite food?",ph:'e.g. jollof rice',bal:'Favourite food'},
+ {sec:'Icebreakers',id:'dream',type:'country',q:'If you could travel anywhere tomorrow, where would you go?',sub:'Pick the country.',bal:'Dreaming of'},
+ {sec:'Icebreakers',id:'brew',type:'pick',q:'Coffee, tea, or something else?',o:['\u2615 Coffee','\u{1F375} Tea','\u{1F4A7} Something else']},
+ {sec:'Icebreakers',id:'watch',type:'text',q:'Favourite movie, book or TV show?',ph:'e.g. The Office',bal:'Loves'},
+ {sec:'Icebreakers',id:'power',type:'pick',q:'If you could have any superpower?',o:['\u{1F5E3}\uFE0F Speak every language','\u{1F300} Teleport anywhere','\u23F8\uFE0F Pause time in meetings','\u{1F52E} Know where every parcel is']},
+ {sec:'Building connections',id:'passion',type:'text',q:"What's something you're passionate about?",ph:'Work or life \u2014 either counts',bal:'Passionate about'},
+ {sec:'Building connections',id:'great',type:'pickother',q:'What would make this team a great place to work for you?',o:GREAT_OPTS,other:'Something else'},
+ {sec:'Guessing game',id:'guessLangs',type:'pick',guess:'langs',q:'How many languages does this room speak between us?',sub:'No peeking at the big screen. It will tell us who was right.',o:['Under 10','10 \u2013 15','16 \u2013 20','21 \u2013 30','More than 30'],hi:[9,15,20,30,Infinity]},
+ {sec:'Guessing game',id:'guessNations',type:'pick',guess:'roots',q:'How many nationalities are in this room?',sub:'Counted by where people grew up. Best guess \u2014 no conferring.',o:['Under 5','5 \u2013 9','10 \u2013 14','15 \u2013 19','20 or more'],hi:[4,9,14,19,Infinity]},
+ {sec:'Guessing game',id:'guessYears',type:'pick',guess:'years',q:'Added together, how many years at DHL are in this room?',sub:"Everyone's years, summed. Go on, be brave.",o:['Under 50','50 \u2013 99','100 \u2013 199','200 \u2013 349','350 or more'],hi:[49,99,199,349,Infinity]},
+ {sec:'Guessing game',id:'guessConts',type:'pick',guess:'conts',q:'How many continents is this room made up of?',sub:'There are six with people on them.',o:['1 or 2','3','4','5','All 6'],hi:[2,3,4,5,6]},
+ {sec:'Guessing game',id:'guessBased',type:'pick',guess:'based',q:'And how many countries do we work from today?',sub:'Where people sit now, not where they grew up.',o:['Under 5','5 \u2013 9','10 \u2013 14','15 \u2013 19','20 or more'],hi:[4,9,14,19,Infinity]},
+ {sec:'Guessing game',id:'guessDist',type:'pick',guess:'dist',q:'How far apart did the two furthest-apart people here grow up?',sub:'Roughly. Half the planet is about 20,000 km.',o:['Under 5,000 km','5,000 \u2013 10,000 km','10,000 \u2013 15,000 km','More than 15,000 km'],hi:[4999,9999,14999,Infinity]}
 ];
 const QIDX=new Map(QUESTIONS.map((q,i)=>[q.id,i]));
-const PICK_IDS=['brew','clock','seat','recharge','power','pizza'];
+/* Which ground-truth question each guessing question needs in order to be scored. */
+const GUESS_NEEDS={langs:'langs',roots:'roots',conts:'roots',dist:'roots',based:'based',years:'years'};
+/* The facilitator picks which questions get asked. This is the default short set. */
+const DEFAULT_QS=['role','based','years','roots','langs','hobbies','great','guessLangs','guessNations','guessYears'];
+let ACTIVE_IDS=DEFAULT_QS.slice();
+function activeQuestions(){return QUESTIONS.filter(q=>ACTIVE_IDS.includes(q.id));}
+function activeCount(){return activeQuestions().length;}
+/** Set the asked questions; guessing questions silently pull in the question they are scored against. */
+function setActiveQuestions(ids){
+  if(!Array.isArray(ids)||!ids.length)return ACTIVE_IDS;
+  const want=new Set(ids.filter(id=>QIDX.has(id)));
+  for(const id of [...want]){const q=QUESTIONS[QIDX.get(id)];if(q.guess){const need=GUESS_NEEDS[q.guess];if(need)want.add(need);}}
+  ACTIVE_IDS=QUESTIONS.filter(q=>want.has(q.id)).map(q=>q.id);
+  return ACTIVE_IDS;
+}
+const PICK_IDS=['role','outside','talent','projects','comms','brew','power','great'];
 const DEFAULT_WEIGHTS={};
 const CHALLENGES={};
 const AVATARS=['✈️','🚁','🚚','📦','🌍','📊','🚀','🛳️','🚂','🏍️','🛵','🚲','⛵','🛰️','🧭','🗺️','📡','🏗️','🏭','⚙️','🔧','🧰','📮','🏷️','⏱️','🔋','💡','🧲','🎯','🔭','🎈','🪁','🛶','🚜','🛸','🎪','🐘','🦉','🦊','🐝','🐢','🐬','🦅','🐺','🦁','🐧','🦒','🐙','🦋','🦩','🐎','🦌','🦜','🐨','🐼','🐯','🦓','🐆','🦔','🦦','🐋','🦘','🐿️','🦚','🐳','🦭','🐞','🦎','🐸','🦥','🐫','🦬'];
@@ -306,7 +396,15 @@ const FACTS=[
  {tag:'Different beats similar',e:'\u{1F9E9}',t:'Research keeps finding that diverse teams solve problems more accurately than similar ones \u2014 not because anyone is smarter, but because different backgrounds catch different blind spots.',s:'Which is exactly why today\u2019s teams are mixed on purpose.'},
  {tag:'Storming is normal',e:'\u{1F32A}\uFE0F',t:'New teams move through Tuckman\u2019s stages: <b>forming, storming, norming, performing</b>. The awkward, slightly scratchy phase is not failure \u2014 it is step two of four.',s:'If your new team argues about the coffee run, congratulations: you are right on schedule.'},
  {tag:'Speak up, land safely',e:'\u{1F6EC}',t:'Aviation transformed its safety record with Crew Resource Management: training every crew member \u2014 however junior \u2014 to speak up the moment something looks wrong.',s:'The best captains made it easy to be challenged. So do the best team leads.'},
- {tag:'Talk between meetings',e:'\u{1F4AC}',t:'MIT researchers who tracked teams with sensor badges found the strongest predictor of performance was not what was said in meetings \u2014 it was the energy of the chats <b>between</b> them.',s:'Coffee-corner conversations are not a break from the work. They are the work.'}];
+ {tag:'Talk between meetings',e:'\u{1F4AC}',t:'MIT researchers who tracked teams with sensor badges found the strongest predictor of performance was not what was said in meetings \u2014 it was the energy of the chats <b>between</b> them.',s:'Coffee-corner conversations are not a break from the work. They are the work.'},
+ {tag:'Diverse teams check their facts',e:'\u{1F50E}',t:'In trading experiments run in the US and Asia, ethnically diverse markets priced assets far more accurately than homogeneous ones. The homogeneous groups were not less clever \u2014 they simply trusted each other\u2019s judgement too readily.',s:'Agreement feels like being right. It is not the same thing.'},
+ {tag:'The comfortable wrong answer',e:'\u{1F642}',t:'Northwestern researchers found teams with an outsider added felt <b>less</b> confident and <b>less</b> comfortable \u2014 while actually solving the problem correctly far more often.',s:'If the meeting felt smooth and easy, that is not evidence it went well.'},
+ {tag:'Diversity pays, measurably',e:'\u{1F4B0}',t:'McKinsey has tracked hundreds of companies across more than a decade: those in the top quartile for ethnic diversity on their executive teams are meaningfully more likely to out-earn their industry peers.',s:'Not a nice-to-have. A line on the P&L.'},
+ {tag:'Where new ideas come from',e:'\u{1F4A1}',t:'BCG surveyed 1,700 companies and found those with above-average leadership diversity earned a notably larger share of revenue from products launched in the last three years.',s:'Innovation is mostly the collision of people who would not otherwise have met.'},
+ {tag:'It is how you think, not just who you are',e:'\u{1F9E0}',t:'Research published in Harvard Business Review found that teams high in <b>cognitive</b> diversity \u2014 different ways of processing a problem \u2014 solved new challenges dramatically faster. It did not correlate with gender, age or nationality.',s:'Which is the argument for actually asking people how they think, rather than assuming.'},
+ {tag:'The passport effect',e:'\u{1F6C2}',t:'Studies of people who have lived abroad find a lasting creativity boost \u2014 but only for those who genuinely adapted to the new place, rather than living alongside it.',s:'Look around this room. That is a lot of adapting.'},
+ {tag:'Two teams becoming one',e:'\u{1F91D}',t:'Research on merged teams keeps finding the same thing: the groups that do best are the ones that build a shared identity early, rather than politely maintaining the old boundary.',s:'Which is roughly what today is for.'},
+ {tag:'Distance is an asset',e:'\u{1F30F}',t:'Teams spread across countries make slower decisions but more robust ones \u2014 the friction of explaining yourself to someone with different assumptions catches errors that a room of like minds waves through.',s:'The annoying question in the meeting is usually the valuable one.'}];
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const hashStr=str=>{let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;return h;};
 const pickBy=(arr,seed)=>arr[hashStr(seed)%arr.length];
@@ -315,18 +413,25 @@ function buildProfile(p){
   const A={};for(const a of p.answers)A[a.q]=a.v;
   const picks={};for(const k of PICK_IDS)if(A[k]!=null)picks[k]=A[k];
   const langs=Array.isArray(A.langs)?A.langs:[];
+  const hobbies=Array.isArray(A.hobbies)?A.hobbies:[];
   const years=(typeof A.years==='number'&&isFinite(A.years))?A.years:null;
-  const count=p.answers.length;
-  return {id:p.id,roots:A.roots||null,langs,years,picks,count,conf:count/QUESTIONS.length,done:count>=QUESTIONS.length};
+  const count=p.answers.filter(a=>a.v!=null&&a.v!=='').length;
+  const need=Math.max(1,activeCount());
+  return {id:p.id,roots:A.roots||null,based:A.based||null,dream:A.dream||null,langs,hobbies,years,picks,count,conf:Math.min(1,count/need),done:count>=need};
 }
 /** Human-readable things two people share (for personal results). */
 function sharedBits(a,b){
   const out=[];
   const shared=a.langs.filter(l=>b.langs.includes(l));
   if(shared.length)out.push(shared.length===1?`you both speak ${shared[0]}`:`you share ${shared.length} languages (${shared.slice(0,3).join(', ')})`);
-  if(a.roots&&a.roots===b.roots)out.push(`roots in ${countryName(a.roots)} ${flagOf(a.roots)}`);
-  const PK={brew:['coffee people','tea people','willpower-powered'],clock:['early birds','night owls'],seat:['window people','aisle people','middle-seat heroes'],pizza:['pro-pineapple','anti-pineapple','secretly pro-pineapple']};
-  for(const k of ['clock','brew','seat','pizza'])if(a.picks[k]!=null&&a.picks[k]===b.picks[k]&&PK[k]&&PK[k][a.picks[k]])out.push(`both ${PK[k][a.picks[k]]}`);
+  if(a.roots&&a.roots===b.roots)out.push(`you both grew up in ${countryName(a.roots)} ${flagOf(a.roots)}`);
+  if(a.based&&a.based===b.based&&a.based!==a.roots)out.push(`you are both based in ${countryName(a.based)} ${flagOf(a.based)}`);
+  if(a.dream&&a.dream===b.dream)out.push(`you would both fly to ${countryName(a.dream)} ${flagOf(a.dream)} tomorrow`);
+  const hob=a.hobbies.filter(h=>b.hobbies.includes(h));
+  if(hob.length)out.push(hob.length===1?`you share ${hob[0].replace(/^\S+\s/,'').toLowerCase()}`:`${hob.length} interests in common (${hob.slice(0,2).map(h=>h.replace(/^\S+\s/,'').toLowerCase()).join(', ')})`);
+  const PK={brew:['coffee people','tea people','neither-of-the-above people'],comms:['Teams people','email people','pick-up-the-phone people','text people'],outside:['cyclists','gym people','travellers','hikers','professional sleepers','wildcards']};
+  for(const k of ['brew','comms','outside'])if(a.picks[k]!=null&&a.picks[k]===b.picks[k]&&PK[k]&&PK[k][a.picks[k]])out.push(`both ${PK[k][a.picks[k]]}`);
+  if(a.picks.role!=null&&a.picks.role===b.picks.role)out.push('the same kind of role');
   if(a.years!=null&&b.years!=null&&Math.abs(a.years-b.years)<=1&&a.years>=1)out.push('joined DHL around the same time');
   return out;
 }
@@ -349,7 +454,7 @@ function groupScore(members,s,w){
   let pickPairs=0,pickDiff=0;
   for(const m of members){if(m.roots)roots.add(m.roots);m.langs.forEach(l=>langUnion.add(l));if(m.years!=null)years.push(m.years);}
   for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const a=members[i],b=members[j];
-    for(const k of ['brew','clock','recharge','power']){if(a.picks[k]!=null&&b.picks[k]!=null){pickPairs++;if(a.picks[k]!==b.picks[k])pickDiff++;}}}
+    for(const k of ['brew','outside','comms','power','role']){if(a.picks[k]!=null&&b.picks[k]!=null){pickPairs++;if(a.picks[k]!==b.picks[k])pickDiff++;}}}
   const rootsDiv=roots.size?(roots.size-1)/Math.max(1,Math.min(n,5)-1):0;
   const langRich=Math.min(1,langUnion.size/(n+2));
   const ySpread=years.length>=2?Math.min(1,(Math.max(...years)-Math.min(...years))/12):0;
@@ -416,47 +521,71 @@ function assemble(profiles,size,w,prevTeams,opts){
   return {teams,pairs,S,s};
 }
 /* ---- phrase bank: several ways to say each pattern, picked per team so cards never read alike ---- */
-const NICKS={langs:['The Interpreters','The Babel Crew','The Translation Desk'],roots:['The World Tour','The Atlas Crew','Team Passport'],years:['The Long Haulers','Old Guard, New Wave','Decades United'],clock:['The Round-the-Clock Crew','24-Hour Coverage'],coffee:['The Espresso Line','Fuelled by Coffee'],tea:['The Tea Council','Steeped in Wisdom'],mix:['The Full Mix','The Combination Lock','The Sampler Box','One of Everything']};
+const NICKS={langs:['The Interpreters','The Babel Crew','The Translation Desk'],roots:['The World Tour','The Atlas Crew','Team Passport'],years:['The Long Haulers','Old Guard, New Wave','Decades United'],roles:['The Full Toolkit','Every Angle Covered','The Cross-Functionals'],coffee:['The Espresso Line','Fuelled by Coffee'],tea:['The Tea Council','Steeped in Wisdom'],mix:['The Full Mix','The Combination Lock','The Sampler Box','One of Everything']};
 /** Passport-based team narrative. Returns the same shape the cards expect. */
 function narrate(team,profiles,w,challenge,ctx){
   ctx=ctx||{};const M=team.members.map(id=>profiles.get(id)).filter(Boolean);const n=M.length;if(!n)return null;
   const seed='t'+team.id+'-'+team.members.slice().sort().join('');
-  const roots=new Set(),langs=new Set();let yTot=0,yCnt=0,yMax=0,yMin=99;
+  const roots=new Set(),langs=new Set(),hob=new Set(),dreams=new Set();let yTot=0,yCnt=0,yMax=0,yMin=99;
   const cnt=k=>{const c={};for(const m of M)if(m.picks[k]!=null)c[m.picks[k]]=(c[m.picks[k]]||0)+1;return c;};
-  for(const m of M){if(m.roots)roots.add(m.roots);m.langs.forEach(l=>langs.add(l));if(m.years!=null){yTot+=m.years;yCnt++;yMax=Math.max(yMax,m.years);yMin=Math.min(yMin,m.years);}}
-  const brew=cnt('brew'),clock=cnt('clock'),pizza=cnt('pizza'),seat=cnt('seat');
+  for(const m of M){if(m.roots)roots.add(m.roots);if(m.dream)dreams.add(m.dream);m.langs.forEach(l=>langs.add(l));m.hobbies.forEach(h=>hob.add(h));if(m.years!=null){yTot+=m.years;yCnt++;yMax=Math.max(yMax,m.years);yMin=Math.min(yMin,m.years);}}
+  const brew=cnt('brew'),comms=cnt('comms'),role=cnt('role'),outside=cnt('outside');
+  const roleN=Object.keys(role).length,commsN=Object.keys(comms).length,outN=Object.keys(outside).length;
   const bits=[];
   if(langs.size>=3)bits.push({t:`between them they speak ${langs.size} languages`,w:langs.size});
-  if(roots.size>=2)bits.push({t:`their roots span ${roots.size} countries (${[...roots].slice(0,4).map(flagOf).join(' ')})`,w:roots.size+1});
+  if(roots.size>=2)bits.push({t:`they grew up in ${roots.size} different countries (${[...roots].slice(0,4).map(flagOf).join(' ')})`,w:roots.size+1});
+  if(roleN>=3)bits.push({t:`${roleN} different roles sit at this table, which is how blind spots get found`,w:4.6});
   if(yCnt>=2&&yTot>=10)bits.push({t:`they carry ${Math.round(yTot)} years of DHL between them`,w:3+yTot/10});
   if(yCnt>=2&&yMax-yMin>=8)bits.push({t:`${Math.round(yMax)} years of experience sits next to fresh eyes \u2014 the best kind of pairing`,w:4});
-  if(clock[0]&&clock[1])bits.push({t:'early birds AND night owls, so this team is awake around the clock',w:3});
+  if(hob.size>=5)bits.push({t:`${hob.size} different interests between them, so conversation will not be a problem`,w:2.8});
+  if(outN>=3)bits.push({t:'they unwind in completely different ways, which is exactly why they will not burn out together',w:2.4});
   if(brew[0]&&brew[1])bits.push({t:'coffee and tea at one table: diplomatic relations, secured',w:2.5});
-  if(pizza[0]&&pizza[1])bits.push({t:'they disagree on pineapple pizza, which guarantees lively lunches',w:2});
-  if(seat[2])bits.push({t:`${seat[2]} of them genuinely chose the middle seat \u2014 trust them with anything`,w:2.2});
+  if(commsN>=3)bits.push({t:'they disagree on Teams versus email, so someone here will have to be brave',w:2.2});
+  if(dreams.size===n&&n>=3)bits.push({t:`if they could fly anywhere tomorrow they would scatter to ${n} different countries`,w:2.1});
   bits.sort((a,b)=>(b.w-a.w)+(((hashStr(seed+a.t)%10)-(hashStr(seed+b.t)%10))/25));
   const chosen=bits.slice(0,2).map(b=>b.t);
   let why=chosen.length?chosen.map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join('. '):'a mix that covers more ground than any one of them alone';
   why=why.charAt(0).toUpperCase()+why.slice(1)+'.';
   let style;
-  if(langs.size>=5)style=pickBy(NICKS.langs,seed);
+  if(roleN>=4)style=pickBy(NICKS.roles,seed);
+  else if(langs.size>=5)style=pickBy(NICKS.langs,seed);
   else if(roots.size>=3)style=pickBy(NICKS.roots,seed);
   else if(yTot>=30)style=pickBy(NICKS.years,seed);
-  else if(clock[0]&&clock[1])style=pickBy(NICKS.clock,seed);
   else if(brew[0]&&!brew[1])style=pickBy(NICKS.coffee,seed);
   else if(brew[1]&&!brew[0])style=pickBy(NICKS.tea,seed);
   else style=pickBy(NICKS.mix,seed);
   const watches=[];
   if(brew[0]&&!brew[1]&&!brew[2])watches.push('Watch out: an all-coffee team. Decisions made before 09:00 are legally binding.');
   if(brew[1]&&!brew[0])watches.push('Watch out: an all-tea team. Nothing will be rushed, and that is a promise.');
-  if(clock[1]&&!clock[0])watches.push('Watch out: all night owls. Schedule nothing before 10:00. Nothing.');
-  if(clock[0]&&!clock[1])watches.push('Watch out: all early birds. By 15:00 this team runs on fumes and biscuits.');
-  if(pizza[0]&&!pizza[1]&&!pizza[2])watches.push('Watch out: unanimous on pineapple pizza. Too much agreement \u2014 appoint a devil\u2019s advocate.');
+  if(roleN===1)watches.push('Watch out: everyone here does the same job. Brilliant shorthand, identical blind spots.');
+  if(commsN===1&&comms[0])watches.push('Watch out: a pure Teams team. Somebody should occasionally pick up a phone.');
+  if(commsN===1&&comms[1])watches.push('Watch out: all email people. This team will be very well documented and very slow.');
   if(langs.size>=5)watches.push('Watch out: with this many languages, the group chat will be a beautiful mystery.');
+  if(roots.size===1&&n>=3)watches.push('Watch out: one shared home country. Comfortable \u2014 so go looking for the outside view.');
   if(!watches.length){watches.push('Watch out: nothing to watch out for. Which is exactly when to double-check the address.','Watch out: this team agrees on everything except lunch. Decide lunch first.');}
   const watch=pickBy(watches,seed+'w');
-  const statline=`${langs.size} language${langs.size===1?'':'s'} \u00B7 ${roots.size} root countr${roots.size===1?'y':'ies'}${yCnt?` \u00B7 ${Math.round(yTot)} DHL years`:''}`;
-  return {why,roles:[],style,watch,project:statline};
+  /* ----- what to actually talk about: concrete overlaps, phrased as an opening line ----- */
+  const conn=[];
+  const tally=(get)=>{const c={};for(const m of M)for(const x of new Set(get(m)))c[x]=(c[x]||0)+1;return c;};
+  const lc=tally(m=>m.langs);
+  const sharedLang=Object.keys(lc).filter(l=>lc[l]>=2&&l!=='English').sort((a,b)=>lc[b]-lc[a])[0];
+  if(sharedLang)conn.push(`${lc[sharedLang]} of you speak ${sharedLang}. Start there.`);
+  const hc=tally(m=>m.hobbies);
+  const sharedHob=Object.keys(hc).filter(h=>hc[h]>=2).sort((a,b)=>hc[b]-hc[a])[0];
+  if(sharedHob)conn.push(`${hc[sharedHob]} of you picked ${String(sharedHob).replace(/^\S+\s/,'').toLowerCase()} \u2014 that is your opening line.`);
+  const wide=widestPair(M.map(m=>m.roots).filter(Boolean));
+  if(wide&&wide.km>3000)conn.push(`Two of you grew up ${wide.km.toLocaleString('en')} km apart, in ${countryName(wide.a)} and ${countryName(wide.b)}. Ask about it.`);
+  if(yCnt>=2&&yMax-yMin>=6)conn.push(`${Math.round(yMax)} years at DHL sits next to ${Math.round(yMin)}. Each name one thing you wish you had known earlier.`);
+  const gcount={};for(const m of M)if(m.picks.great!=null)gcount[m.picks.great]=(gcount[m.picks.great]||0)+1;
+  const agreed=Object.keys(gcount).find(k=>gcount[k]>=Math.max(2,Math.ceil(n/2)));
+  if(agreed!=null&&GREAT_OPTS[agreed])conn.push(`You mostly want the same thing from a team: ${String(GREAT_OPTS[agreed]).replace(/^\S+\s/,'').toLowerCase()}. Say out loud what that looks like in practice.`);
+  const dreamShared=[...dreams].find(d=>M.filter(m=>m.dream===d).length>=2);
+  if(dreamShared)conn.push(`Two of you would fly to ${countryName(dreamShared)} tomorrow. Compare itineraries.`);
+  if(roleN>=3)conn.push(`${roleN} different roles here. Go round and each say what you actually do all day \u2014 most people guess wrong.`);
+  if(conn.length<2)conn.push('Easiest opener: where did each of you grow up, and what do you do when you are not working?');
+  const connect=conn.slice(0,3);
+  const statline=`${langs.size} language${langs.size===1?'':'s'} \u00B7 ${roots.size} home countr${roots.size===1?'y':'ies'}${roleN>1?` \u00B7 ${roleN} roles`:''}${yCnt?` \u00B7 ${Math.round(yTot)} DHL years`:''}`;
+  return {why,roles:[],style,watch,connect,project:statline};
 }
 /* ENGINE-END */
 
@@ -543,6 +672,7 @@ function wireControls(dispatch){
   $('teamSize').onchange=e=>dispatch('teamSize',+e.target.value);
   $('viewSel').onchange=e=>dispatch('view',e.target.value);
   $('simSpeed').oninput=e=>dispatch('speed',+e.target.value);
+  if($('qsecSel'))$('qsecSel').onchange=e=>{dispatch('qsecSet',+e.target.value);if(typeof window.__paintQCount==='function')window.__paintQCount();};
   $('sim10').onclick=()=>dispatch('addSim',10);$('sim30').onclick=()=>dispatch('addSim',30);$('sim60').onclick=()=>dispatch('addSim',60);
   $('simPause').onclick=()=>dispatch('pause');
   $('btnStart').onclick=()=>dispatch('start');
@@ -566,7 +696,7 @@ function renderStatus(st){
   if($('teamSize').value!==String(st.teamSize))$('teamSize').value=st.teamSize;
   if(st.view&&$('viewSel').value!==st.view)$('viewSel').value=st.view;
   if($('challenge').value!==(st.challenge||''))$('challenge').value=st.challenge||'';
-  $('plist').innerHTML=st.list.map(p=>`<div><b>${p.avatar} ${p.name}${p.sim?' <span style="opacity:.5">(sim)</span>':''}</b><span class="dots">${'●'.repeat(p.answered)}${'○'.repeat(Math.max(0,QUESTIONS.length-p.answered))}</span><button class="kick" data-id="${p.id}" data-name="${p.name}" title="Remove">✕</button></div>`).join('')||'<div><span>Nobody has joined yet</span></div>';
+  $('plist').innerHTML=st.list.map(p=>`<div><b>${p.avatar} ${p.name}${p.sim?' <span style="opacity:.5">(sim)</span>':''}</b><span class="dots">${'●'.repeat(p.answered)}${'○'.repeat(Math.max(0,(st.qn||QUESTIONS.length)-p.answered))}</span><button class="kick" data-id="${p.id}" data-name="${p.name}" title="Remove">✕</button></div>`).join('')||'<div><span>Nobody has joined yet</span></div>';
 }
 
 /* ---------------------------- STAGE ---------------------------- */
@@ -577,13 +707,14 @@ function startStage(){
     slots:new Map(),
     phase:'gathering',participants:new Map(),nodes:new Map(),teams:[],pairs:[],links:new Map(),
     weights:DEFAULT_WEIGHTS,challenge:null,lastMoved:{},moves:[],alpha:0.05,relaxUntil:0,
-    hostSeen:false,reveal:null,finalTeams:null,narratives:null,cardIndex:0,simPaused:false,simSpeed:4,teamSize:4,dirty:false,nextId:1,showStats:true,showFacts:true,factIdx:-1,view:'network',seatOf:new Map(),blockOf:new Map()
+    qsec:30,hostSeen:false,reveal:null,finalTeams:null,narratives:null,cardIndex:0,simPaused:false,simSpeed:4,teamSize:4,dirty:false,nextId:1,showStats:true,showFacts:true,factIdx:-1,view:'network',seatOf:new Map(),blockOf:new Map()
   };
   let W=0,H=0,DPR=1,t0=performance.now();
 
   /* ----- data ----- */
   const SIM_ROOTS=['GH','GH','NG','NG','KE','ZA','ZA','BE','BE','NL','DE','FR','TZ','UG','CI','SN','CM','ET','ZM','ZW','RW','GB','PT','ES','IN','MA','EG','US','IT','PL'];
   const SIM_LANGS={GH:['Twi','Fante','Ga','Ewe','Hausa'],NG:['Yoruba','Igbo','Hausa','Pidgin'],KE:['Swahili','Kikuyu','Luo'],TZ:['Swahili'],UG:['Luganda','Swahili'],ZA:['Zulu','Xhosa','Afrikaans','Sesotho'],ZM:['Bemba','Chewa'],ZW:['Shona','Ndebele'],RW:['Kinyarwanda','French'],CI:['French','Bambara'],SN:['French','Wolof'],CM:['French'],ET:['Amharic','Oromo'],MA:['Arabic','French'],EG:['Arabic'],BE:['Dutch','French'],NL:['Dutch'],DE:['German'],FR:['French'],PT:['Portuguese'],ES:['Spanish'],IT:['Italian'],PL:['Polish'],IN:['Hindi','Tamil'],GB:[],US:[]};
+  const SIM_TEXT={secret:['I have a black belt','I once met a president','I can solve a Rubik\u2019s cube in a minute','I used to DJ at weekends','I have visited 40 countries','I bake my own bread','I was in a band once'],food:['Jollof rice','Sushi','Pasta','Waffles','Braai','Biryani','Fufu and light soup','Moules-frites','Pizza'],watch:['The Office','Dune','Money Heist','Ted Lasso','Things Fall Apart','Suits','Planet Earth','Breaking Bad'],passion:['Mentoring people','Football','Sustainability','Cooking','Photography','Teaching my kids to cycle','Running marathons']};
   function makeSimPlan(){
     const roots=pick(SIM_ROOTS);
     const pool=[...(SIM_LANGS[roots]||[])];
@@ -591,7 +722,14 @@ function startStage(){
     for(let i=0;i<extra;i++)langs.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
     const years=Math.round(Math.min(28,-6*Math.log(Math.random()))*2)/2;
     const plan={roots,langs,years};
-    for(const q of QUESTIONS)if(q.type==='pick')plan[q.id]=Math.floor(Math.random()*q.o.length);
+    plan.based=pick(SIM_ROOTS);plan.dream=pick(SIM_ROOTS);
+    const hp=[...HOBBY_OPTS];plan.hobbies=[];
+    const hn=1+Math.floor(Math.random()*3);
+    for(let i=0;i<hn;i++)plan.hobbies.push(hp.splice(Math.floor(Math.random()*hp.length),1)[0]);
+    for(const q of QUESTIONS){
+      if(q.type==='pick'||q.type==='pickother')plan[q.id]=Math.floor(Math.random()*q.o.length);
+      else if(q.type==='text')plan[q.id]=SIM_TEXT[q.id]?pick(SIM_TEXT[q.id]):'';
+    }
     return plan;
   }
   function addParticipant({avatar,name,token,sim}){
@@ -607,27 +745,35 @@ function startStage(){
     broadcastAvatars();state.dirty=true;refreshList();return p;
   }
   function validAnswer(qid,v){const q=QUESTIONS[QIDX.get(qid)];if(!q)return false;
+    if(v===null)return true; /* ran out of time — counts as asked, contributes nothing */
     if(q.type==='pick')return Number.isInteger(v)&&v>=0&&v<q.o.length;
+    if(q.type==='pickother')return (Number.isInteger(v)&&v>=0&&v<q.o.length)||(typeof v==='string'&&v.trim().length>0&&v.length<=40);
     if(q.type==='country')return typeof v==='string'&&/^[A-Z]{2}$/.test(v);
-    if(q.type==='langs')return Array.isArray(v)&&v.length>0&&v.length<=20&&v.every(x=>typeof x==='string'&&x.length>0&&x.length<=24);
+    if(q.type==='multi')return Array.isArray(v)&&v.length>0&&v.length<=20&&v.every(x=>typeof x==='string'&&x.length>0&&x.length<=30);
+    if(q.type==='text')return typeof v==='string'&&v.length<=140;
     if(q.type==='years')return typeof v==='number'&&isFinite(v)&&v>=0&&v<=50;
     return false;}
   function recordAnswer(p,qid,v,quiet){
     if(state.phase==='revealed')return false;
     if(!validAnswer(qid,v))return false;
     if(p.answers.some(a=>a.q===qid))return false;
-    if(Array.isArray(v))v=v.slice(0,20).map(x=>String(x).slice(0,24));
+    if(Array.isArray(v))v=v.slice(0,20).map(x=>String(x).slice(0,30));
+    if(typeof v==='string'&&QUESTIONS[QIDX.get(qid)].type==='text')v=v.trim().slice(0,140);
     p.answers.push({q:qid,v});const n=state.nodes.get(p.id);if(n)n.pulse=1;
-    if(p.answers.length>=QUESTIONS.length)p.doneAt=performance.now();
+    if(p.answers.length>=activeCount())p.doneAt=performance.now();
     if(!quiet)popAnswer(qid,v);
     state.dirty=true;return true;
   }
   /* ----- live answer balloons: anonymous, transient, purely for the room's delight ----- */
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  function answerText(qid,v){const q=QUESTIONS[QIDX.get(qid)];if(!q)return null;
-    if(q.type==='pick'){const o=q.o[v];return o?esc(o.split(' \u2014 ')[0]):null;}
-    if(q.type==='country')return `${flagOf(v)} Roots in ${esc(countryName(v))}`;
-    if(q.type==='langs'){const l=v.slice(0,2).map(esc).join(', ');const x=v.length-2;return `\u{1F5E3}\uFE0F Speaks ${l}${x>0?` +${x} more`:''}`;}
+  function answerText(qid,v){const q=QUESTIONS[QIDX.get(qid)];if(!q||v==null)return null;
+    if(q.guess)return null;
+    const strip=t=>String(t).split(' \u2014 ')[0];
+    if(q.type==='pick')return q.o[v]?esc(strip(q.o[v])):null;
+    if(q.type==='pickother'){const raw=typeof v==='string'?v:q.o[v];if(!raw)return null;return `${q.bal?esc(q.bal)+': ':''}${esc(strip(raw))}`;}
+    if(q.type==='country')return `${flagOf(v)} ${esc(q.bal||'From')} ${esc(countryName(v))}`;
+    if(q.type==='multi'){const l=v.slice(0,2).map(x=>esc(strip(x))).join(', ');const x=v.length-2;return `${esc(q.bal||'')} ${l}${x>0?` +${x} more`:''}`.trim();}
+    if(q.type==='text'){const t=String(v).trim();if(!t)return null;return `${esc(q.bal||'')} \u2014 ${esc(t.slice(0,64))}`.trim();}
     if(q.type==='years'){const n=Math.round(v);return n<=0?'\u{1F4E6} Brand new to DHL':`\u{1F4E6} ${n} year${n===1?'':'s'} at DHL`;}
     return null;}
   let lastBloon=0;
@@ -652,8 +798,8 @@ function startStage(){
     box.appendChild(b);
   }
   function simAnswer(p){
-    const i=p.answers.length;if(i>=QUESTIONS.length||!p.simPlan)return;
-    const q=QUESTIONS[i];recordAnswer(p,q.id,p.simPlan[q.id]);
+    const list=activeQuestions();const i=p.answers.length;if(i>=list.length||!p.simPlan)return;
+    const q=list[i];recordAnswer(p,q.id,p.simPlan[q.id]);
   }
 
   /* ----- matching ----- */
@@ -678,9 +824,9 @@ function startStage(){
   }
   function updateStats(profiles){
     const all=[...state.participants.values()];
-    const joined=all.length,done=all.filter(p=>p.answers.length>=QUESTIONS.length).length,ans=all.reduce((a,p)=>a+p.answers.length,0);
+    const need=Math.max(1,activeCount());const joined=all.length,done=all.filter(p=>p.answers.length>=need).length,ans=all.reduce((a,p)=>a+p.answers.length,0);
     const links=state.pairs.length,teams=state.teams.filter(t=>t.members.length>=2&&t.score>=0.26).length;
-    const meanConf=joined?all.reduce((a,p)=>a+p.answers.length/QUESTIONS.length,0)/joined:0;
+    const meanConf=joined?all.reduce((a,p)=>a+Math.min(1,p.answers.length/need),0)/joined:0;
     const stability=joined?1-Math.min(1,state.moves.length/joined):0;
     const conf=joined?0.6*meanConf+0.4*stability:0;
     $('sJoined').textContent=joined;$('sDone').textContent=done;$('sAns').textContent=ans;$('sLinks').textContent=links;$('sTeams').textContent=teams;
@@ -695,23 +841,63 @@ function startStage(){
   let roomIdx=-1,factTick=0;
   function roomFacts(){
     const ps=[...state.participants.values()];const MIN=5;
-    const val=id=>ps.map(p=>{const a=p.answers.find(x=>x.q===id);return a?a.v:null;}).filter(v=>v!=null);
+    const val=id=>ps.map(p=>{const a=p.answers.find(x=>x.q===id);return a?a.v:null;}).filter(v=>v!=null&&v!=='');
     const out=[];
-    const L=val('langs');if(L.length>=MIN){const set=new Set();L.forEach(l=>l.forEach(x=>set.add(x)));
-      const sample=[...set].filter(x=>x!=='English').slice(0,3).join(', ');
-      out.push({e:'\u{1F5E3}\uFE0F',t:`This room speaks <b>${set.size} languages</b>${sample?` \u2014 including ${sample}`:''}.`});
-      const maxL=Math.max(...L.map(l=>l.length));if(maxL>=4)out.push({e:'\u{1F3C6}',t:`Someone in this room speaks <b>${maxL} languages</b>. Show-off. (Respect.)`});}
-    const R=val('roots');if(R.length>=MIN){const set=new Set(R);out.push({e:'\u{1F30D}',t:`Roots in <b>${set.size} countr${set.size===1?'y':'ies'}</b> ${[...set].slice(0,7).map(flagOf).join(' ')} \u2014 one room.`});}
-    const Y=val('years');if(Y.length>=MIN){const tot=Math.round(Y.reduce((a,b)=>a+b,0));
-      out.push({e:'\u{1F4E6}',t:`Together this room carries <b>${tot} years of DHL</b>. That is a LOT of peak seasons.`});
-      const mx=Math.max(...Y);if(mx>=10)out.push({e:'\u{1F396}\uFE0F',t:`Longest serving in the room: <b>${Math.round(mx)} years</b>. A round of applause is appropriate.`});}
+    const bare=t=>String(t).replace(/^\S+\s/,'');
+    const L=val('langs');const langSet=new Set();L.forEach(l=>l.forEach(x=>langSet.add(x)));
+    const R=val('roots');const rootSet=new Set(R);
+    const Y=val('years');const yTot=Math.round(Y.reduce((a,b)=>a+b,0));
+    if(L.length>=MIN){const sample=[...langSet].filter(x=>x!=='English').slice(0,3).join(', ');
+      out.push({e:'\u{1F5E3}\uFE0F',t:`This room speaks <b>${langSet.size} languages</b>${sample?` \u2014 including ${sample}`:''}.`});
+      const maxL=Math.max(...L.map(l=>l.length));if(maxL>=4)out.push({e:'\u{1F3C6}',t:`Someone here speaks <b>${maxL} languages</b>. Show-off. (Respect.)`});}
+    const contSet=new Set([...rootSet].map(c=>CONT_OF[c]).filter(Boolean));
+    const wide=widestPair(R);
+    if(R.length>=MIN){
+      out.push({e:'\u{1F30D}',t:`We grew up in <b>${rootSet.size} countr${rootSet.size===1?'y':'ies'}</b> ${[...rootSet].slice(0,7).map(flagOf).join(' ')} \u2014 and ended up in one room.`});
+      if(contSet.size)out.push({e:'\u{1F5FA}\uFE0F',t:`This room is made of <b>${contSet.size} continent${contSet.size===1?'':'s'}</b>: ${[...contSet].map(k=>CONT_NAME[k]).join(', ')}.`});
+      if(wide&&wide.km>1500)out.push({e:'\u{1F4CF}',t:`The two furthest-apart childhoods here: <b>${countryName(wide.a)}</b> ${flagOf(wide.a)} and <b>${countryName(wide.b)}</b> ${flagOf(wide.b)} \u2014 about <b>${wide.km.toLocaleString('en')} km</b> apart.`});}
+    const B=val('based');if(B.length>=MIN){const set=new Set(B);out.push({e:'\u{1F4CD}',t:`We work from <b>${set.size} countr${set.size===1?'y':'ies'}</b> ${[...set].slice(0,7).map(flagOf).join(' ')}.`});}
+    if(Y.length>=MIN){out.push({e:'\u{1F4E6}',t:`Together this room carries <b>${yTot} years of DHL</b>. That is a LOT of peak seasons.`});
+      const mx=Math.max(...Y);if(mx>=10)out.push({e:'\u{1F396}\uFE0F',t:`Longest serving in the room: <b>${Math.round(mx)} years</b>. Applause is appropriate.`});}
+    const D=val('dream');if(D.length>=MIN){const c={};D.forEach(x=>c[x]=(c[x]||0)+1);let bi=null;for(const k in c)if(bi===null||c[k]>c[bi])bi=k;
+      out.push({e:'\u2708\uFE0F',t:`Given a free flight tomorrow, most of this room would land in <b>${countryName(bi)}</b> ${flagOf(bi)}.`});
+      const set=new Set(D);if(set.size>=5)out.push({e:'\u{1F5FA}\uFE0F',t:`<b>${set.size} different dream destinations</b> in one room. Somebody start a travel channel.`});}
+    const H=val('hobbies');if(H.length>=MIN){const c={};H.forEach(l=>l.forEach(x=>c[x]=(c[x]||0)+1));
+      const top=Object.keys(c).sort((a,b)=>c[b]-c[a]).slice(0,3).map(bare);
+      out.push({e:'\u{1F3AF}',t:`Biggest interests in the room: <b>${top.join('</b>, <b>')}</b>.`});
+      const solo=Object.keys(c).filter(k=>c[k]===1);if(solo.length>=3)out.push({e:'\u{1F984}',t:`<b>${solo.length} interests</b> here belong to exactly one person. Go and find out whose.`});}
+    const S=val('secret');if(S.length>=MIN)out.push({e:'\u{1F92B}',t:`<b>${S.length} people</b> have just admitted something most of the room did not know about them.`});
     const pct=id=>{const v=val(id);if(v.length<MIN)return null;const c={};v.forEach(x=>c[x]=(c[x]||0)+1);return {c,n:v.length};};
-    const brew=pct('brew');if(brew){const p1=i=>Math.round(100*(brew.c[i]||0)/brew.n);out.push({e:'\u2615',t:`Coffee <b>${p1(0)}%</b> \u00B7 tea <b>${p1(1)}%</b>${brew.c[2]?` \u2014 and ${brew.c[2]} running on pure willpower`:''}.`});}
-    const clock=pct('clock');if(clock)out.push({e:'\u{1F305}',t:`<b>${clock.c[0]||0} early birds</b> vs <b>${clock.c[1]||0} night owls</b>. Meetings at 11:00 it is.`});
-    const seat=pct('seat');if(seat)out.push({e:'\u2708\uFE0F',t:`Window ${Math.round(100*(seat.c[0]||0)/seat.n)}%, aisle ${Math.round(100*(seat.c[1]||0)/seat.n)}%${seat.c[2]?` \u2014 and <b>${seat.c[2]} heroes chose the middle seat</b>`:''}.`});
-    const re=pct('recharge');if(re){const names=['moving','making things','watching things','peace and quiet','people'];let bi=0;for(const k in re.c)if(re.c[k]>(re.c[bi]||0))bi=k;out.push({e:'\u{1F50B}',t:`This room mostly recharges with <b>${names[bi]}</b>.`});}
-    const pw=pct('power');if(pw){const names=['speaking every language','teleporting','pausing time in meetings','knowing where every parcel is'];let bi=0;for(const k in pw.c)if(pw.c[k]>(pw.c[bi]||0))bi=k;out.push({e:'\u{1F9B8}',t:`Superpower of choice in this room: <b>${names[bi]}</b>.`});}
-    const pz=pct('pizza');if(pz)out.push({e:'\u{1F34D}',t:`Pineapple on pizza: <b>${pz.c[0]||0} yes</b>, <b>${pz.c[1]||0} no</b>${pz.c[2]?`, and ${pz.c[2]} \u201Conly when nobody's watching\u201D`:''}.`});
+    const top=o=>{let bi=null;for(const k in o.c)if(bi===null||o.c[k]>o.c[bi])bi=k;return bi;};
+    const brew=pct('brew');if(brew){const p1=i=>Math.round(100*(brew.c[i]||0)/brew.n);out.push({e:'\u2615',t:`Coffee <b>${p1(0)}%</b> \u00B7 tea <b>${p1(1)}%</b>${brew.c[2]?` \u2014 and ${brew.c[2]} on something else entirely`:''}.`});}
+    const comms=pct('comms');if(comms){const names=['Teams','email','a quick call','a text'];out.push({e:'\u{1F4AC}',t:`Preferred channel in this room: <b>${names[top(comms)]||'something else'}</b>. Now you know who to annoy and how.`});}
+    const outs=pct('outside');if(outs){const names=['cycling','the gym','travelling','hiking','sleeping','something else entirely'];out.push({e:'\u{1F50B}',t:`Outside work, this room mostly chooses <b>${names[top(outs)]}</b>.`});}
+    const pw=pct('power');if(pw){const names=['speaking every language','teleporting','pausing time in meetings','knowing where every parcel is'];out.push({e:'\u{1F9B8}',t:`Superpower of choice here: <b>${names[top(pw)]}</b>.`});}
+    const pj=pct('projects');if(pj){const heavy=(pj.c[2]||0)+(pj.c[3]||0);if(heavy)out.push({e:'\u{1F5C2}\uFE0F',t:`<b>${heavy}</b> people in this room are juggling four or more projects right now. Be kind to them.`});}
+    const rl=pct('role');if(rl){const k=Object.keys(rl.c).length;out.push({e:'\u{1F9E9}',t:`<b>${k} different roles</b> in this room \u2014 that is ${k} angles on the same problem.`});}
+    const gr=pct('great');if(gr){const bi=top(gr);const lbl=GREAT_OPTS[bi]?bare(GREAT_OPTS[bi]):String(bi);
+      out.push({e:'\u{1F49B}',t:`What this room wants most from a team: <b>${lbl.toLowerCase()}</b>.`});}
+    const tal=pct('talent');if(tal){const bi=top(tal);const lbl=TALENT_OPTS[bi]?bare(String(TALENT_OPTS[bi]).split(' \u2014 ')[0]):String(bi);
+      out.push({e:'\u2728',t:`Most common hidden talent in the room: <b>${lbl.toLowerCase()}</b>.`});}
+    /* ----- the guessing game: what the room guessed vs what is actually true ----- */
+    const actual={langs:langSet.size,roots:rootSet.size,years:yTot,conts:contSet.size,based:new Set(B).size,dist:wide?wide.km:null};
+    const ready={langs:L.length>=MIN,roots:R.length>=MIN,years:Y.length>=MIN,conts:R.length>=MIN&&contSet.size>0,based:B.length>=MIN,dist:!!wide&&R.length>=MIN};
+    const GLABEL={langs:'languages',roots:'nationalities',years:'DHL years',conts:'continents',based:'countries we work from',dist:'kilometres apart'};
+    for(const q of QUESTIONS){
+      if(!q.guess||!ready[q.guess])continue;
+      const g=val(q.id);if(g.length<3)continue;
+      const a=actual[q.guess];
+      const c={};g.forEach(x=>c[x]=(c[x]||0)+1);
+      let bi=0;for(const k in c)if(c[k]>(c[bi]||0))bi=+k;
+      let band=0;while(band<q.hi.length-1&&a>q.hi[band])band++;
+      const label=GLABEL[q.guess]||'that';
+      const shown=q.guess==='dist'?a.toLocaleString('en')+' km':a;
+      const share=Math.round(100*(c[bi]||0)/g.length);
+      const verdict=band===bi?'Spot on.':(band>bi?'This room is bigger than you thought.':'Slightly over-confident, this room.');
+      out.push({e:band===bi?'\u{1F3AF}':'\u{1F605}',t:`Most of you guessed <b>${q.o[bi]}</b> ${label} (${share}% of the room). Actual so far: <b>${shown}</b>. ${verdict}`});
+      const right=g.filter(x=>x===band).length;
+      if(g.length>=6)out.push({e:'\u{1F9E0}',t:`<b>${right} of ${g.length}</b> called the ${label} right. ${right===0?'Nobody saw that coming.':right===g.length?'Suspiciously well informed, this room.':'Not bad.'}`});
+    }
     return out;
   }
   function nextFact(){const card=$('factCard');card.classList.remove('in');
@@ -827,10 +1013,10 @@ function startStage(){
       // tile
       ctx.save();ctx.translate(nd.x,nd.y);
       if(state.reveal&&nd.nameA>0&&nd.nameA<1){ctx.scale(Math.abs(Math.cos(nd.nameA*Math.PI)),1);}
-      ctx.fillStyle=p.answers.length>=QUESTIONS.length?'#1E2836':'#18202B';ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;
+      ctx.fillStyle=p.answers.length>=activeCount()?'#1E2836':'#18202B';ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;
       rounded(-rr,-rr,rr*2,rr*2,rr*0.36);ctx.fill();ctx.stroke();
       // progress ring
-      const prog=p.answers.length/QUESTIONS.length;if(prog>0){ctx.strokeStyle=prog>=1?'rgba(255,204,0,.9)':'rgba(255,255,255,.35)';ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(0,0,rr*1.18,-Math.PI/2,-Math.PI/2+prog*Math.PI*2);ctx.stroke();}
+      const prog=Math.min(1,p.answers.length/Math.max(1,activeCount()));if(prog>0){ctx.strokeStyle=prog>=1?'rgba(255,204,0,.9)':'rgba(255,255,255,.35)';ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(0,0,rr*1.18,-Math.PI/2,-Math.PI/2+prog*Math.PI*2);ctx.stroke();}
       ctx.font=`${Math.round(rr*1.15)}px system-ui,"Apple Color Emoji","Segoe UI Emoji",sans-serif`;ctx.fillStyle='#fff';ctx.fillText(p.avatar,0,rr*0.06);
       ctx.restore();
     }
@@ -1041,7 +1227,7 @@ function startStage(){
       for(const nd of state.nodes.values()){const p=state.participants.get(nd.id);if(!p)continue;const walking=!!nd.path;const tid=teamOfDraw.get(nd.id);
         if(nd.pulse>0){ctx.strokeStyle=`rgba(212,5,17,${nd.pulse*0.8})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(nd.x,nd.y,sw*(0.65+(1-nd.pulse)*0.5),0,7);ctx.stroke();}
         ctx.fillStyle=tid?`rgba(${tintOf(tid)},.95)`:'#2B3444';const k2=walking?1.15:1;rounded(nd.x-sw*k2/2,nd.y-sh*k2/2,sw*k2,sh*k2,P*0.12);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1;ctx.stroke();
-        const prog=p.answers.length/QUESTIONS.length;if(prog>0&&prog<1){ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(nd.x,nd.y,sw*0.48,-Math.PI/2,-Math.PI/2+prog*Math.PI*2);ctx.stroke();}}
+        const prog=Math.min(1,p.answers.length/Math.max(1,activeCount()));if(prog>0&&prog<1){ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(nd.x,nd.y,sw*0.48,-Math.PI/2,-Math.PI/2+prog*Math.PI*2);ctx.stroke();}}
     });
     // ---- screen-space labels (kept upright) ----
     if(P>=18){const f=`700 ${Math.max(7,Math.round(P*0.2))}px system-ui,sans-serif`,c='rgba(27,31,36,.55)';const gy=frontY+P*0.9+(PL.front-P*1.15)/2;
@@ -1158,7 +1344,7 @@ function startStage(){
       const k2=walking?1.15:1;quadPath(rectQ(nd.x-sw*k2/2,nd.y-sh*k2/2,sw*k2,sh*k2));ctx.fillStyle=tid?`rgba(${tintOf(tid)},.95)`:'rgba(60,72,90,.95)';ctx.fill();ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1;ctx.stroke();
       const c=HPT(nd.x+(walking?Math.sin(t*14+nd.seed)*1.2:0),nd.y);const a=HPT(nd.x-sw/2,nd.y-sh/2),b=HPT(nd.x+sw/2,nd.y+sh/2);const size=Math.min(Math.abs(b.x-a.x),Math.abs(b.y-a.y));
       if(nd.pulse>0){ctx.strokeStyle=`rgba(255,204,0,${nd.pulse*0.9})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(c.x,c.y,size*(0.7+(1-nd.pulse)*0.6),0,7);ctx.stroke();}
-      const prog=p.answers.length/QUESTIONS.length;if(prog>0&&prog<1){ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(c.x,c.y,size*0.5,-Math.PI/2,-Math.PI/2+prog*Math.PI*2);ctx.stroke();}
+      const prog=Math.min(1,p.answers.length/Math.max(1,activeCount()));if(prog>0&&prog<1){ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(c.x,c.y,size*0.5,-Math.PI/2,-Math.PI/2+prog*Math.PI*2);ctx.stroke();}
       ctx.font=`${Math.round(size*0.72)}px system-ui,"Apple Color Emoji","Segoe UI Emoji",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.fillText(p.avatar,c.x,c.y+1);}
     // ---- reveal roster: team chips across the sky ----
     if(state.reveal){const fs=15,lineH=30,gapX=14,gapY=10;let x=40,y=Math.max(H*0.56,panel[1].y+H*0.26);const maxX=W-470;ctx.font=`600 ${fs}px system-ui,sans-serif`;ctx.textBaseline='middle';
@@ -1175,7 +1361,7 @@ function startStage(){
   let last=performance.now();
   function frame(now){
     const dt=Math.min(0.05,(now-last)/1000);last=now;
-    if(state.phase==='discovery'&&!state.simPaused){for(const p of state.participants.values()){if(p.sim&&p.answers.length<QUESTIONS.length&&now>=p.nextAnswer){simAnswer(p);p.nextAnswer=now+rnd(1500,6000)*(4/state.simSpeed);}}}
+    if(state.phase==='discovery'&&!state.simPaused){for(const p of state.participants.values()){if(p.sim&&p.answers.length<activeCount()&&now>=p.nextAnswer){simAnswer(p);p.nextAnswer=now+rnd(1500,6000)*(4/state.simSpeed);}}}
     if(!state.reveal)recompute(false);
     if(state.view==='photo'){planeStep(dt);ctx.clearRect(0,0,W,H);drawPhoto();}else if(state.view==='plane'){planeStep(dt);ctx.clearRect(0,0,W,H);drawPlane();}else{step(dt);draw();}
     if(state.reveal)tickReveal(now);
@@ -1183,7 +1369,7 @@ function startStage(){
   }
 
   /* ----- phases, challenge, reveal ----- */
-  function setPhase(ph){state.phase=ph;$('phaseLabel').textContent=ph==='gathering'?'Gathering':ph==='discovery'?'Discovery':'Revealed';send('phase',{phase:ph});
+  function setPhase(ph){state.phase=ph;$('phaseLabel').textContent=ph==='gathering'?'Gathering':ph==='discovery'?'Discovery':'Revealed';send('phase',{phase:ph,qs:ACTIVE_IDS,qsec:state.qsec});
     if(ph==='discovery'){$('roomBox').classList.add('small');$('btnStart').textContent='Questions open';$('btnStart').disabled=true;for(const p of state.participants.values())p.nextAnswer=performance.now()+rnd(500,4000);}}
   function setChallenge(key){
     state.challenge=(key&&CHALLENGES[key])||null;state.weights=DEFAULT_WEIGHTS;
@@ -1236,7 +1422,7 @@ function startStage(){
   function showCards(){const box=$('teamCards');box.innerHTML='';const teams=state.finalTeams;const per=3;const start=state.cardIndex*per;const slice=teams.slice(start,start+per);
     slice.forEach((t,i)=>{const nar=state.narratives.get(t.id);const card=document.createElement('div');card.className='tcard';
       card.innerHTML=`<h3><i style="background:rgb(${tintOf(t.id)})"></i>Team ${t.label}</h3><div class="style">${nar.style}</div><div class="members">${t.members.map(m=>{const p=state.participants.get(m);return `<span><em>${p.avatar}</em>${p.name}</span>`;}).join('')}</div>
-        <p><b>The mix</b> — ${nar.why}</p><p><b>Between them</b> — ${nar.project}</p>${nar.watch?`<p style="color:var(--yellow)">${nar.watch}</p>`:''}`;
+        <p><b>The mix</b> — ${nar.why}</p><p><b>Between them</b> — ${nar.project}</p>${nar.connect&&nar.connect.length?`<div class="starthere"><b>Start here</b><ul>${nar.connect.map(c=>`<li>${c}</li>`).join('')}</ul></div>`:''}${nar.watch?`<p style="color:var(--yellow)">${nar.watch}</p>`:''}`;
       box.appendChild(card);setTimeout(()=>card.classList.add('in'),120+i*700);});
     if(teams.length>per){const nav=document.createElement('div');nav.className='tnav';nav.innerHTML=`<button id="prevT" ${start===0?'disabled':''}>Previous</button><button id="nextT" ${start+per>=teams.length?'disabled':''}>Next teams</button>`;box.appendChild(nav);
       nav.querySelector('#prevT').onclick=()=>{state.cardIndex--;showCards();};nav.querySelector('#nextT').onclick=()=>{state.cardIndex++;showCards();};}
@@ -1263,10 +1449,16 @@ function startStage(){
       state.teams.forEach(t2=>t2.members=t2.members.filter(m=>m!==id));state.teams=state.teams.filter(t2=>t2.members.length>0);
       if(p.token)send('kicked',{token:p.token});state.dirty=true;recompute(true);broadcastAvatars();refreshList();toast(`${p.avatar} ${p.name} removed`);},
     fullscreen:()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();},
+    qsecSet:v=>{const n=Math.max(0,Math.min(180,v|0));state.qsec=n;send('phase',{phase:state.phase,qs:ACTIVE_IDS,qsec:n});toast(n?`${n} seconds per question`:'Question timer off');},
+    qsSet:arr=>{if(state.phase!=='lobby'){toast('Questions are locked once the session has started');return;}
+      const ids=setActiveQuestions(arr);state.dirty=true;refreshList();
+      send('phase',{phase:state.phase,qs:ids});
+      toast(`Asking ${ids.length} question${ids.length===1?'':'s'}`);},
     factsSet:arr=>{if(!Array.isArray(arr))return;const ok=arr.filter(x=>Number.isInteger(x)&&x>=0&&x<FACTS.length);factOrder=shuffleIdx(ok);state.factIdx=0;toast(ok.length===FACTS.length?'All fun facts on':`Fun facts on stage: ${ok.length} of ${FACTS.length}`);}
   };
   wireControls((name,arg)=>actions[name]&&actions[name](arg));
   function status(){return {view:state.view==='plane'&&PL.top2d?'plane2d':state.view,phase:state.phase,joined:state.participants.size,simPaused:state.simPaused,showStats:state.showStats,showFacts:state.showFacts,teamSize:state.teamSize,challenge:state.challenge?Object.keys(CHALLENGES).find(k=>CHALLENGES[k]===state.challenge):'',
+    qn:activeCount(),qsel:ACTIVE_IDS.slice(),qsec:state.qsec,
     list:[...state.participants.values()].map(p=>({id:p.id,avatar:p.avatar,name:p.name,answered:p.answers.length,sim:p.sim}))};}
   function refreshList(){const st=status();renderStatus(st);send('status',st);}
   setInterval(refreshList,1000);
@@ -1281,7 +1473,7 @@ function startStage(){
   function broadcastAvatars(){send('avatars',{taken:[...state.participants.values()].map(p=>p.avatar)});}
   bus.addEventListener('message',ev=>{const m=ev.data;if(!m||!m.type)return;
     if(m.type==='hello'){const p=m.token?[...state.participants.values()].find(x=>x.token===m.token):null;
-      send('state',{token:m.token,phase:state.phase,taken:[...state.participants.values()].map(p=>p.avatar),me:p?{avatar:p.avatar,name:p.name,answered:p.answers.length}:null});}
+      send('state',{token:m.token,qs:ACTIVE_IDS,qsec:state.qsec,phase:state.phase,taken:[...state.participants.values()].map(p=>p.avatar),me:p?{avatar:p.avatar,name:p.name,answered:p.answers.length}:null});}
     else if(m.type==='sync'){ // participant sends everything it knows; stage upserts and replays missing answers
       let p=[...state.participants.values()].find(x=>x.token===m.token);
       if(!p){const taken=[...state.participants.values()].some(x=>x.avatar===m.avatar);
@@ -1290,9 +1482,9 @@ function startStage(){
         if(!avatar){send('full',{token:m.token});return;}
         p=addParticipant({avatar,name:m.name,token:m.token});toast(`${p.avatar} ${p.name} joined`);}
       for(const a of (m.answers||[]))recordAnswer(p,a.q,a.v,true);
-      send('synced',{token:m.token,avatar:p.avatar,answered:p.answers.length,phase:state.phase,changed:p.avatar!==m.avatar});
+      send('synced',{token:m.token,qs:ACTIVE_IDS,qsec:state.qsec,avatar:p.avatar,answered:p.answers.length,phase:state.phase,changed:p.avatar!==m.avatar});
       if(state.phase==='revealed'&&state.lastResults&&state.lastResults.has(m.token))send('results',{token:m.token,results:state.lastResults.get(m.token)});}
-    else if(m.type==='answer'){const p=[...state.participants.values()].find(x=>x.token===m.token);if(!p){send('resync',{token:m.token});return;}const ok=recordAnswer(p,m.q,m.v);send('ack',{token:m.token,answered:p.answers.length,accepted:ok,phase:state.phase});}
+    else if(m.type==='answer'){const p=[...state.participants.values()].find(x=>x.token===m.token);if(!p){send('resync',{token:m.token});return;}const ok=recordAnswer(p,m.q,m.v);send('ack',{token:m.token,qs:ACTIVE_IDS,qsec:state.qsec,answered:p.answers.length,accepted:ok,phase:state.phase});}
     else if(m.type==='cmd'){state.hostSeen=true;$('drawer').classList.remove('open');if(m.name==='fullscreen'){toast('Press F on the stage window for full screen');return;}if(actions[m.name])actions[m.name](m.arg);refreshList();}
     else if(m.type==='host-hello'){state.hostSeen=true;$('drawer').classList.remove('open');$('gearBtn').classList.remove('show');refreshList();}
   });
@@ -1304,29 +1496,67 @@ function startStage(){
 
 /* ---------------------------- HOST CONSOLE (separate window, never shared) ---------------------------- */
 function startHost(){
-  document.body.classList.add('host');document.title='Team Discovery — control panel';
+  document.body.classList.add('host');document.documentElement.classList.add('host');document.title='Team Discovery — control panel';
   $('drawer').classList.add('open');$('hstat').classList.remove('hidden');
   let seen=false,lastSeen=0;
   wireControls((name,arg)=>{if(name==='fullscreen'){$('hstat').textContent='Full screen has to be pressed on the stage itself: click the stage window and press F.';$('hstat').classList.remove('hidden');return;}send('cmd',{name,arg});});
   $('btnHost').style.display='inline-block';$('btnHost').textContent='Open stage window';$('btnHost').onclick=()=>window.open(location.href.split('#')[0]+'#stage&room='+roomCode,'_blank');
+  /* ----- question picker: choose which of the questions actually get asked ----- */
+  const QKEY='dtd-qs-'+roomCode;
+  const qp=document.createElement('details');qp.id='qPick';
+  const secs=[...new Set(QUESTIONS.map(q=>q.sec||'Questions'))];
+  qp.innerHTML='<summary>\u2753 Questions asked \u2014 <b id="qpCount"></b></summary><div class="fpbody">'+
+    '<div class="sub" style="margin:0 0 8px">Untick anything you do not want asked. Shorter is better \u2014 ten is about four minutes per person. Guessing questions quietly switch on the question they are scored against.</div>'+
+    secs.map(sec=>`<div class="qsec">${sec}</div>`+
+      QUESTIONS.filter(q=>(q.sec||'Questions')===sec).map(q=>
+        `<label class="fpick"><input type="checkbox" data-q="${q.id}"><span><b>${q.q}</b><em>${q.sub||''}</em></span></label>`).join('')).join('')+
+    '<div class="row" style="margin-top:10px"><button id="qpTen">Recommended 10</button><button id="qpAll">All on</button></div>'+
+    '<p class="tip" id="qpLock" style="margin-top:8px"></p></div>';
+  $('drawer').insertBefore(qp,$('hSim'));
+  const qboxes=[...qp.querySelectorAll('input[data-q]')];
+  let qsaved=null;try{qsaved=JSON.parse(localStorage.getItem(QKEY)||'null');}catch(e){}
+  const applyQBoxes=ids=>{const set=new Set(ids);qboxes.forEach(b=>b.checked=set.has(b.dataset.q));};
+  applyQBoxes(Array.isArray(qsaved)&&qsaved.length?qsaved:DEFAULT_QS);
+  const selQs=()=>qboxes.filter(b=>b.checked).map(b=>b.dataset.q);
+  const paintQCount=()=>{const n=selQs().length;const secs=$('qsecSel')?+$('qsecSel').value:30;
+    let txt=n+' of '+QUESTIONS.length;
+    if(secs){const mins=n*secs/60;txt+=' \u00B7 about '+(mins<1?'under a minute':(Math.round(mins*10)/10)+' min');}
+    $('qpCount').textContent=txt;};
+  const sendQs=()=>{let ids=selQs();
+    if(!ids.length){applyQBoxes(DEFAULT_QS);ids=selQs();}
+    /* pull in whatever the guessing questions need to be scored against */
+    const want=new Set(ids);
+    for(const id of [...want]){const q=QUESTIONS[QIDX.get(id)];if(q&&q.guess&&GUESS_NEEDS[q.guess])want.add(GUESS_NEEDS[q.guess]);}
+    ids=QUESTIONS.filter(q=>want.has(q.id)).map(q=>q.id);
+    applyQBoxes(ids);paintQCount();
+    try{localStorage.setItem(QKEY,JSON.stringify(ids));}catch(e){}
+    send('cmd',{name:'qsSet',arg:ids});};
+  qp.addEventListener('change',sendQs);
+  paintQCount();window.__paintQCount=paintQCount;
+  $('qpTen').onclick=e=>{e.preventDefault();applyQBoxes(DEFAULT_QS);sendQs();};
+  $('qpAll').onclick=e=>{e.preventDefault();qboxes.forEach(b=>b.checked=true);sendQs();};
+  const lockQs=locked=>{qboxes.forEach(b=>b.disabled=locked);$('qpTen').disabled=locked;$('qpAll').disabled=locked;
+    $('qpLock').textContent=locked?'The session has started, so the question list is locked \u2014 press Reset to change it.':'';};
   /* ----- fun-fact picker: tick which facts the stage may show ----- */
   const FKEY='dtd-facts-'+roomCode;
-  const fp=document.createElement('div');fp.id='factPick';
-  fp.innerHTML='<h3>Fun facts on stage</h3><div class="sub" style="margin:0 0 6px">Tick the facts the stage may show. \u201CThis room\u201D answer facts always run.</div>'+
+  const fp=document.createElement('details');fp.id='factPick';
+  fp.innerHTML='<summary>\u2728 Fun facts on stage \u2014 <b id="fpCount"></b></summary><div class="fpbody"><div class="sub" style="margin:0 0 8px">Tick the ones the stage may show. \u201CThis room\u201D facts from the live answers always run.</div>'+
     FACTS.map((f,i)=>`<label class="fpick"><input type="checkbox" data-i="${i}"><span>${f.e} <b>${f.tag}</b><em>${f.t.replace(/<[^>]+>/g,'')}</em></span></label>`).join('')+
-    '<div class="row" style="margin-top:8px"><button id="fpAll">All on</button><button id="fpNone">All off</button></div>';
-  $('drawer').appendChild(fp);
+    '<div class="row" style="margin-top:8px"><button id="fpAll">All on</button><button id="fpNone">All off</button></div></div>';
+  $('drawer').insertBefore(fp,$('hSim'));
   const boxes=[...fp.querySelectorAll('input[type=checkbox]')];
   let saved=null;try{saved=JSON.parse(localStorage.getItem(FKEY)||'null');}catch(e){}
   const savedSet=Array.isArray(saved)?new Set(saved):null;
   boxes.forEach(b=>{b.checked=savedSet?savedSet.has(+b.dataset.i):true;});
   const selFacts=()=>boxes.filter(b=>b.checked).map(b=>+b.dataset.i);
-  const sendFacts=()=>{const s=selFacts();try{localStorage.setItem(FKEY,JSON.stringify(s));}catch(e){}send('cmd',{name:'factsSet',arg:s});};
+  const paintCount=()=>{const n=selFacts().length;$('fpCount').textContent=n===FACTS.length?'all '+n+' on':n+' of '+FACTS.length+' on';};
+  const sendFacts=()=>{const s2=selFacts();paintCount();try{localStorage.setItem(FKEY,JSON.stringify(s2));}catch(e){}send('cmd',{name:'factsSet',arg:s2});};
   fp.addEventListener('change',sendFacts);
-  $('fpAll').onclick=()=>{boxes.forEach(b=>b.checked=true);sendFacts();};
-  $('fpNone').onclick=()=>{boxes.forEach(b=>b.checked=false);sendFacts();};
+  paintCount();
+  $('fpAll').onclick=e=>{e.preventDefault();boxes.forEach(b=>b.checked=true);sendFacts();};
+  $('fpNone').onclick=e=>{e.preventDefault();boxes.forEach(b=>b.checked=false);sendFacts();};
   $('btnFull').textContent='Full screen (press F on the stage)';
-  bus.addEventListener('message',ev=>{const m=ev.data;if(!m||m.type!=='status')return;const first=!seen||Date.now()-lastSeen>3500;seen=true;lastSeen=Date.now();$('hstat').classList.add('hidden');renderStatus(m);if(first)sendFacts();});
+  bus.addEventListener('message',ev=>{const m=ev.data;if(!m||m.type!=='status')return;const first=!seen||Date.now()-lastSeen>3500;seen=true;lastSeen=Date.now();$('hstat').classList.add('hidden');renderStatus(m);lockQs(m.phase&&m.phase!=='lobby');if(first){sendQs();sendFacts();}});
   send('host-hello',{});setInterval(()=>{if(!seen||Date.now()-lastSeen>3500){$('hstat').textContent='Looking for the stage… press “Open stage window” below (or open the app elsewhere and choose Stage), and keep that window open.';$('hstat').classList.remove('hidden');send('host-hello',{});}},2000);
 }
 
@@ -1344,10 +1574,38 @@ function startParticipant(){
   const P={step:needCode?'code':'avatar',taken:[],noticeInit:'',avatar:saved?saved.avatar:null,name:saved?saved.name:'',answers:saved?saved.answers:[],joined:!!(saved&&saved.name),connected:false,phase:'gathering',results:null,notice:''};
   const persist=()=>localStorage.setItem(KEY,JSON.stringify({avatar:P.avatar,name:P.name,answers:P.answers}));
   const sync=(live)=>send('sync',{token,avatar:P.avatar,name:P.name,answers:P.answers,live:!!live});
+  const LIST=()=>{const ids=Array.isArray(P.qs)&&P.qs.length?P.qs:ACTIVE_IDS;const out=QUESTIONS.filter(q=>ids.includes(q.id));return out.length?out:QUESTIONS;};
   const nextStep=()=>{if(P.answers&&P.answers.some(a=>typeof a.q!=='string')){P.answers=[];persist();}
-    if(P.results)P.step='results';else if(!P.joined)P.step=P.avatar?'name':'avatar';else if(P.answers.length>=QUESTIONS.length)P.step='done';else P.step='question';render();};
+    const list=LIST();
+    /* if the facilitator changed the set before we started, drop anything no longer asked */
+    if(P.answers.length&&P.answers.some(a=>!list.some(q=>q.id===a.q))){P.answers=P.answers.filter(a=>list.some(q=>q.id===a.q));persist();}
+    if(P.results)P.step='results';else if(!P.joined)P.step=P.avatar?'name':'avatar';else if(P.answers.length>=list.length)P.step='done';else P.step='question';render();};
   const linkNote=()=>P.connected?'':`<p class="note">Not connected to a big screen right now — your answers are saved on this device and appear on the stage as soon as it's open on this computer.</p>`;
+  /* ----- per-question countdown: keeps the whole room moving at one pace ----- */
+  const clearTimer=()=>{if(P._tick){clearInterval(P._tick);P._tick=null;}};
+  function armTimer(q,total,onTimeout){
+    clearTimer();
+    const secs=(typeof P.qsec==='number'?P.qsec:30)|0;
+    const box=$('qtime');
+    if(!box)return;
+    if(!secs){box.style.display='none';return;}
+    box.style.display='flex';
+    const key=q.id+'#'+P.answers.length;
+    if(P._tkey!==key||!P._tend){P._tkey=key;P._tend=Date.now()+secs*1000;}
+    const bar=$('qtbar'),num=$('qtnum');
+    const paint=()=>{
+      const ms=Math.max(0,P._tend-Date.now());
+      const left=Math.ceil(ms/1000);
+      if(num)num.textContent=left+'s';
+      if(bar)bar.style.width=(100*ms/(secs*1000))+'%';
+      box.classList.toggle('warn',left<=5);
+      if(ms<=0){clearTimer();P._tend=0;onTimeout();}
+    };
+    paint();
+    if(P._tend)P._tick=setInterval(paint,200);
+  }
   const render=()=>{
+    clearTimer();
     const notice=(P.noticeInit||P.notice)?`<p class="lead" style="color:#B3000C">${P.noticeInit||P.notice}</p>`:'';P.notice='';
     if(P.step==='code'){body.innerHTML=`${notice}<h2>Enter the room code</h2><p class="lead">It's on the big screen.</p><input type="text" id="rc" maxlength="6" placeholder="ABC123" autocapitalize="characters" autocomplete="off" style="letter-spacing:.3em;text-transform:uppercase;text-align:center"><button class="primary" id="go">Join</button>`;
       const inp=$('rc');inp.focus();inp.onkeydown=e=>{if(e.key==='Enter')$('go').click();};
@@ -1360,37 +1618,68 @@ function startParticipant(){
       const inp=$('nm');inp.focus();inp.onkeydown=e=>{if(e.key==='Enter')$('join').click();};
       $('join').onclick=()=>{const n=inp.value.trim();if(n.length<2){inp.focus();return;}P.name=n;P.joined=true;persist();if(P.connected)sync(true);nextStep();};
       $('back').onclick=()=>{P.step='avatar';render();};}
-    else if(P.step==='question'){const q=QUESTIONS[P.answers.length];
-      const head=`${notice}<div class="prog"><em>${P.avatar}</em><div class="pd">${QUESTIONS.map((_,i)=>`<i class="${i<P.answers.length?'on':''}"></i>`).join('')}</div><span>${P.answers.length+1} / ${QUESTIONS.length}</span></div><h2>${q.q}</h2>${q.sub?`<p class="lead">${q.sub}</p>`:''}`;
-      const submit=v=>{P.answers.push({q:q.id,v});persist();if(P.connected)send('answer',{token,q:q.id,v});nextStep();};
+    else if(P.step==='question'){const qlist=LIST();const q=qlist[P.answers.length];if(!q){P.step='done';render();return;}
+      const eq=t=>String(t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+      const pctDone=Math.round(100*P.answers.length/qlist.length);
+      const isGame=!!q.guess;
+      const head=`${notice}<div class="prog"><em>${P.avatar}</em><div class="pd"><i style="width:${pctDone}%"></i></div><span>${P.answers.length+1} / ${qlist.length}</span></div>`+
+        (q.sec?`<div class="secl${isGame?' game':''}">${q.sec}</div>`:'')+
+        `<h2>${q.q}</h2>${q.sub?`<p class="lead">${q.sub}</p>`:''}`+
+        `<div class="qtime" id="qtime" style="display:none"><div class="tb"><i id="qtbar"></i></div><span id="qtnum"></span></div>`;
+      const submit=v=>{clearTimer();P._tkey=null;P._tend=0;P.answers.push({q:q.id,v});persist();if(P.connected)send('answer',{token,q:q.id,v});nextStep();};
+      let onTimeout=()=>submit(null);
       if(q.type==='pick'){body.innerHTML=head+q.o.map((o,i)=>`<button data-o="${i}">${o}</button>`).join('')+linkNote();
         body.querySelectorAll('button[data-o]').forEach(b=>b.onclick=()=>submit(+b.dataset.o));}
+      else if(q.type==='pickother'){
+        body.innerHTML=head+q.o.map((o,i)=>`<button data-o="${i}">${o}</button>`).join('')+
+          `<button id="othBtn">\u270F\uFE0F ${eq(q.other||'Something else')}\u2026</button>`+
+          `<div id="othWrap" style="display:none"><input type="text" id="othIn" maxlength="40" placeholder="Type it here" autocomplete="off"><button class="primary" id="othGo">Continue</button></div>`+linkNote();
+        body.querySelectorAll('button[data-o]').forEach(b=>b.onclick=()=>submit(+b.dataset.o));
+        $('othBtn').onclick=()=>{$('othBtn').style.display='none';$('othWrap').style.display='block';$('othIn').focus();};
+        $('othGo').onclick=()=>{const v=$('othIn').value.trim().slice(0,40);if(!v){$('othIn').focus();return;}submit(v);};
+        $('othIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('othGo').click();}};
+        onTimeout=()=>{const w=$('othWrap');const t=(w&&w.style.display!=='none'&&$('othIn'))?$('othIn').value.trim().slice(0,40):'';submit(t||null);};}
       else if(q.type==='country'){body.innerHTML=head+`<input type="text" id="csearch" placeholder="Type to search\u2026" autocomplete="off"><div class="clist" id="clist"></div>`;
         const list=$('clist'),inp=$('csearch');
         const draw=f=>{const ff=f.trim().toLowerCase();const rows=COUNTRIES.filter(c=>!ff||c.n.toLowerCase().includes(ff)).slice(0,ff?40:300);
           list.innerHTML=rows.map(c=>`<button data-c="${c.c}"><em>${flagOf(c.c)}</em>${c.n}</button>`).join('')||'<p class="lead" style="padding:12px">No match \u2014 try another spelling.</p>';
           list.querySelectorAll('button').forEach(b=>b.onclick=()=>submit(b.dataset.c));};
-        inp.oninput=()=>draw(inp.value);draw('');inp.focus();}
-      else if(q.type==='langs'){if(!P.langSel)P.langSel=[];
-        body.innerHTML=head+`<div class="chips" id="chips"></div><div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="addlang" placeholder="Add another language\u2026" style="flex:1;margin:0" maxlength="24"><button id="addBtn" style="width:auto;margin:0;padding:0 18px">Add</button></div><button class="primary" id="langDone" style="margin-top:16px">That's all of them</button>`;
+        inp.oninput=()=>draw(inp.value);draw('');inp.focus();
+        onTimeout=()=>submit(null);}
+      else if(q.type==='multi'){if(!P.multiSel)P.multiSel=[];
+        body.innerHTML=head+`<div class="chips" id="chips"></div>`+
+          (q.add?`<div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="addx" placeholder="${eq(q.add)}\u2026" style="flex:1;margin:0" maxlength="30" autocomplete="off"><button id="addBtn" style="width:auto;margin:0;padding:0 18px">Add</button></div>`:'')+
+          `<button class="primary" id="multiDone" style="margin-top:16px">That's all of them</button>`;
         const chips=$('chips');
-        const drawChips=()=>{const all=[...new Set([...LANGS,...P.langSel])];chips.innerHTML=all.map(l=>`<button data-l="${l.replace(/"/g,'')}" class="${P.langSel.includes(l)?'on':''}">${l}</button>`).join('');
-          chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{const l=b.dataset.l;const i2=P.langSel.indexOf(l);if(i2>=0)P.langSel.splice(i2,1);else if(P.langSel.length<20)P.langSel.push(l);drawChips();});};
+        const drawChips=()=>{const all=[...new Set([...q.o,...P.multiSel])];
+          chips.innerHTML=all.map(l=>`<button data-l="${eq(l)}" class="${P.multiSel.includes(l)?'on':''}">${eq(l)}</button>`).join('');
+          chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{const l=b.dataset.l;const i2=P.multiSel.indexOf(l);if(i2>=0)P.multiSel.splice(i2,1);else if(P.multiSel.length<20)P.multiSel.push(l);drawChips();});};
         drawChips();
-        $('addBtn').onclick=()=>{const v=$('addlang').value.trim().slice(0,24);if(v&&!P.langSel.includes(v)&&P.langSel.length<20){P.langSel.push(v);$('addlang').value='';drawChips();}};
-        $('addlang').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('addBtn').click();}};
-        $('langDone').onclick=()=>{if(!P.langSel.length){P.notice='Pick at least one \u2014 even just English counts.';render();return;}const v=P.langSel.slice();P.langSel=null;submit(v);};}
+        if(q.add){$('addBtn').onclick=()=>{const v=$('addx').value.trim().slice(0,30);if(v&&!P.multiSel.includes(v)&&P.multiSel.length<20){P.multiSel.push(v);$('addx').value='';drawChips();}};
+          $('addx').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('addBtn').click();}};}
+        $('multiDone').onclick=()=>{if(!P.multiSel.length){P.notice='Pick at least one to carry on.';render();return;}const v=P.multiSel.slice();P.multiSel=null;submit(v);};
+        onTimeout=()=>{const v=(P.multiSel&&P.multiSel.length)?P.multiSel.slice():null;P.multiSel=null;submit(v);};}
+      else if(q.type==='text'){
+        body.innerHTML=head+`<input type="text" id="tin" maxlength="140" placeholder="${eq(q.ph||'Type your answer')}" autocomplete="off"><button class="primary" id="tGo">Continue</button><button class="skip" id="tSkip">Skip this one</button>`;
+        const inp=$('tin');inp.focus();inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('tGo').click();}};
+        $('tGo').onclick=()=>submit(inp.value.trim().slice(0,140));
+        $('tSkip').onclick=()=>submit('');
+        onTimeout=()=>submit(inp.value.trim().slice(0,140));}
       else if(q.type==='years'){body.innerHTML=head+`<input type="number" id="yrs" min="0" max="50" step="0.5" placeholder="e.g. 7" inputmode="decimal"><button class="primary" id="yrsGo">Continue</button>`;
         const inp=$('yrs');inp.focus();inp.onkeydown=e=>{if(e.key==='Enter')$('yrsGo').click();};
-        $('yrsGo').onclick=()=>{const v=parseFloat(inp.value);if(!isFinite(v)||v<0||v>50){P.notice='A number between 0 and 50, please.';render();return;}submit(Math.round(v*2)/2);};}}
+        $('yrsGo').onclick=()=>{const v=parseFloat(inp.value);if(!isFinite(v)||v<0||v>50){P.notice='A number between 0 and 50, please.';render();return;}submit(Math.round(v*2)/2);};
+        onTimeout=()=>{const v=parseFloat(inp.value);submit(isFinite(v)&&v>=0&&v<=50?Math.round(v*2)/2:null);};}
+      armTimer(q,qlist.length,()=>onTimeout());}
     else if(P.step==='done'){body.innerHTML=`<div class="bigav">${P.avatar}</div><h2>That's everything, ${P.name}.</h2><p class="lead">Watch the big screen — the room's story is building up there. Your team and matches appear here at the reveal.</p>${linkNote()}<button id="restart" style="margin-top:24px;text-align:center;color:var(--text-dim)">Start over on this device</button>`;
       $('restart').onclick=()=>{if(confirm('Clear your avatar, name and answers on this device?')){localStorage.removeItem(KEY);localStorage.removeItem('dtd-token-'+roomCode);location.reload();}};}
     else if(P.step==='results'){const r=P.results;body.innerHTML=`<div class="bigav">${P.avatar}</div><h2>${P.name}, here's what emerged</h2>
       <div class="result"><h3>Most in common with</h3>${r.matches.map(m=>`<div class="match"><em>${m.avatar}</em><span>${m.name}${m.shared?`<br><small style="color:var(--text-dim)">${m.shared}</small>`:''}</span></div>`).join('')||'<p>Not enough participants yet.</p>'}</div>
-      ${r.team?`<div class="result"><h3>Your team — Team ${r.team.label}</h3><div class="members" style="margin:6px 0 12px">${r.team.members.map(m=>`<span><em>${m.avatar}</em>${m.name}</span>`).join('')}</div><p style="margin:6px 0;font-size:14px;line-height:1.5"><b>${r.narrative.style}</b> — ${r.narrative.why}</p><p style="margin:6px 0;font-size:14px;line-height:1.5"><b>Between you</b> — ${r.narrative.project}</p>${r.narrative.watch?`<p style="margin:6px 0;font-size:14px;line-height:1.5;color:#7a6400">${r.narrative.watch}</p>`:''}</div>`:''}
+      ${r.team?`<div class="result"><h3>Your team — Team ${r.team.label}</h3><div class="members" style="margin:6px 0 12px">${r.team.members.map(m=>`<span><em>${m.avatar}</em>${m.name}</span>`).join('')}</div><p style="margin:6px 0;font-size:14px;line-height:1.5"><b>${r.narrative.style}</b> — ${r.narrative.why}</p><p style="margin:6px 0;font-size:14px;line-height:1.5"><b>Between you</b> — ${r.narrative.project}</p>${r.narrative.connect&&r.narrative.connect.length?`<div class="starthere"><b>Start here</b><ul>${r.narrative.connect.map(c=>`<li>${c}</li>`).join('')}</ul></div>`:''}${r.narrative.watch?`<p style="margin:6px 0;font-size:14px;line-height:1.5;color:#7a6400">${r.narrative.watch}</p>`:''}</div>`:''}
       <p class="note">Just for fun — answers are shown only as room totals and are not stored after the session.</p>`;}
   };
   bus.addEventListener('message',ev=>{const m=ev.data;if(!m||!m.type)return;
+    if(m.qs&&Array.isArray(m.qs)&&m.qs.length&&JSON.stringify(m.qs)!==JSON.stringify(P.qs)){P.qs=m.qs.slice();persist();}
+    if(typeof m.qsec==='number'&&m.qsec!==P.qsec){P.qsec=m.qsec;persist();if(P.step==='question')render();}
     if(m.type==='avatars'){P.taken=m.taken.filter(a=>a!==P.avatar);if(P.step==='avatar')render();}
     else if(m.type==='state'&&m.token===token){const first=!P.connected;P.connected=true;P.phase=m.phase;P.taken=m.taken.filter(a=>a!==P.avatar);if(P.joined)sync(false);else if(first)render();}
     else if(m.type==='synced'&&m.token===token){if(m.changed){P.notice=`Your avatar was already taken on the big screen, so you're now ${m.avatar}.`;P.avatar=m.avatar;persist();}P.phase=m.phase;nextStep();}
