@@ -128,6 +128,12 @@ body.host .plist{max-height:none}
 .grid button{aspect-ratio:1;display:grid;place-items:center;font-size:34px;padding:0;margin:0;min-height:0;border-radius:16px}
 .grid button.taken{opacity:.22;cursor:default;filter:grayscale(1)}
 .grid button.sel{border-color:#1B1F24;box-shadow:0 0 0 3px var(--yellow)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{width:auto;margin:0;padding:9px 14px;border-radius:999px;font-size:15px;min-height:0}
+.chips button.on{border-color:#1B1F24;background:var(--yellow);box-shadow:inset 0 0 0 2px #1B1F24}
+.clist{max-height:46vh;overflow-y:auto;border:1.5px solid #E1E0DA;border-radius:14px;background:#fff;margin-top:10px}
+.clist button{border:none;border-bottom:1px solid #EFEEE8;border-radius:0;margin:0;text-align:left;display:flex;align-items:center;gap:12px;padding:12px 14px}
+.clist button em{font-style:normal;font-size:22px}
 .prog{display:flex;align-items:center;gap:12px;margin-bottom:22px;color:var(--text-dim);font-size:14px}
 .prog .pd{display:flex;gap:5px}.prog .pd i{width:8px;height:8px;border-radius:50%;background:#DDDCD4}.prog .pd i.on{background:#1B1F24}
 .prog em{font-size:28px;font-style:normal}
@@ -235,131 +241,94 @@ body.host .plist{max-height:none}
 /* =====================================================================
    ENGINE-START  (pure functions — no DOM; shared by stage and tests)
    ===================================================================== */
-const DIMS=['pace','structure','orientation','risk','voice','focus'];
-const POLES={pace:['deliberate','fast'],structure:['explore-first','plan-first'],orientation:['people-focused','task-focused'],risk:['prove-it','try-it'],voice:['listen-first','speak-first'],focus:['big-picture','detail']};
-const POLE_TEXT={
-  pace:['people who like to take their time and get it right','people who move fast'],
-  structure:['people who explore before committing','people who like a plan before they start'],
-  orientation:['people who put the team first','people who keep the goal in sight'],
-  risk:['people who want proof before acting','people who would rather try it and see'],
-  voice:['people who listen first','people who speak up early'],
-  focus:['big-picture thinkers','detail thinkers']
-};
-const ROLES=['driver','connector','builder','analyst','navigator'];
-const ROLE_TEXT={driver:'a pace-setter',connector:'the glue',builder:'a maker',analyst:'the one who asks why',navigator:'a route-finder'};
-// vector index: 0 pace(-deliberate,+fast) 1 structure(-explore,+plan) 2 orientation(-people,+task) 3 risk(-prove,+try) 4 voice(-listen,+speak) 5 focus(-big,+detail)
-const V=(o)=>DIMS.map(d=>o[d]||0);
+/* ---- passport data ---- */
+const COUNTRY_CODES='AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CD CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL IT JM JP JO KZ KE KI KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX FM MD MC MN ME MA MZ MM NA NR NP NL NZ NI NE NG MK NO OM PK PW PS PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TW TJ TZ TH TL TG TO TT TN TR TM TV UG UA AE GB US UY UZ VU VE VN YE ZM ZW HK MO PR CW AW'.split(' ');
+const flagOf=c=>String.fromCodePoint(...[...c].map(ch=>0x1F1A5+ch.charCodeAt(0)));
+let _regionNames=null;try{_regionNames=new Intl.DisplayNames(['en'],{type:'region'});}catch(e){}
+const countryName=c=>{try{return (_regionNames&&_regionNames.of(c))||c;}catch(e){return c;}};
+const COUNTRIES=COUNTRY_CODES.map(c=>({c,n:countryName(c)})).sort((a,b)=>a.n.localeCompare(b.n));
+const LANGS=['English','French','Dutch','German','Spanish','Portuguese','Italian','Arabic','Swahili','Twi','Fante','Ga','Ewe','Hausa','Yoruba','Igbo','Pidgin','Wolof','Bambara','Amharic','Oromo','Somali','Zulu','Xhosa','Afrikaans','Sesotho','Setswana','Shona','Ndebele','Chewa','Bemba','Lingala','Kikongo','Kinyarwanda','Kirundi','Luganda','Luo','Kikuyu','Kamba','Dagbani','Krio','Malagasy','Hindi','Urdu','Tamil','Mandarin','Cantonese','Turkish','Polish','Romanian','Russian','Ukrainian','Greek','Tagalog'];
 const QUESTIONS=[
- {q:'A wild idea appears in the meeting. You…',o:[
-   {t:'Grab a whiteboard marker',v:V({structure:.8,focus:.4,pace:-.3}),r:'analyst'},
-   {t:'Say "let’s just try it"',v:V({structure:-.8,risk:.7,pace:.5,focus:-.3}),r:'builder'},
-   {t:'Ask who it affects first',v:V({orientation:-.6,voice:-.3}),r:'connector'}]},
- {q:'The plan changes at 4:55 on a Friday. You…',o:[
-   {t:'Rewrite the plan. Weekend can wait.',v:V({structure:.8,pace:-.5,risk:-.3,orientation:.3})},
-   {t:'Wing it. Plans are for Mondays.',v:V({structure:-.7,pace:.5,focus:-.3})},
-   {t:'Message the team before anything',v:V({orientation:-.5,voice:-.4})}]},
- {q:'In meetings you’re the one who…',o:[
-   {t:'Kicks off before the coffee lands',v:V({voice:.8,focus:-.5,orientation:.3}),r:'driver'},
-   {t:'Listens, then sums it all up',v:V({voice:-.8,pace:-.3}),r:'connector'},
-   {t:'Asks "but why?" three times',v:V({voice:.4,risk:-.5,focus:.4}),r:'analyst'}]},
- {q:'Your proudest moment is when the work is…',o:[
-   {t:'Done before anyone asked',v:V({pace:.7,orientation:.4}),r:'driver'},
-   {t:'So neat it deserves a frame',v:V({focus:.8,pace:-.4,risk:-.3}),r:'builder'},
-   {t:'Done a way nobody had tried',v:V({risk:.8,focus:-.6}),r:'navigator'}]},
- {q:'A parcel is lost. Your first instinct…',o:[
-   {t:'Open the tracking data',v:V({focus:.7,pace:-.3,orientation:.5}),r:'analyst'},
-   {t:'Call whoever had it last',v:V({orientation:-.6,voice:-.3}),r:'connector'},
-   {t:'Send a new one now, ask later',v:V({pace:.8,risk:.4}),r:'driver'}]},
- {q:'Your dream team feels like…',o:[
-   {t:'A pit crew: fast and a bit loud',v:V({pace:.7,structure:-.6,focus:-.3})},
-   {t:'A Swiss watch: calm and precise',v:V({pace:-.6,structure:.7,risk:-.3,orientation:.3})},
-   {t:'A family dinner: close and noisy',v:V({orientation:-.7})}]},
- {q:'A free hour at work. You…',o:[
-   {t:'Finally fix that annoying thing',v:V({focus:.7,structure:.4,orientation:.3,risk:-.2}),r:'builder'},
-   {t:'Chase the idea in your head',v:V({structure:-.6,focus:-.6,risk:.4}),r:'navigator'},
-   {t:'Go find people. Snacks help.',v:V({orientation:-.6}),r:'connector'}]},
- {q:'Deadline tomorrow, half done. You…',o:[
-   {t:'Cut it in half and ship it',v:V({pace:.8,risk:.4,orientation:.3}),r:'driver'},
-   {t:'Stay late, do it properly, sigh',v:V({focus:.6,pace:-.3}),r:'builder'},
-   {t:'Ask for help. Loudly.',v:V({orientation:-.5,voice:.3}),r:'connector'}]},
- {q:'On a team you’re usually the one who…',o:[
-   {t:'Sets the pace',v:V({pace:.5,voice:.4,focus:-.3}),r:'driver'},
-   {t:'Keeps everyone talking',v:V({orientation:-.5,voice:-.2}),r:'connector'},
-   {t:'Actually builds the thing',v:V({focus:.4,structure:.2,orientation:.4}),r:'builder'},
-   {t:'Spots the hole in the plan',v:V({focus:.5,risk:-.3}),r:'analyst'}]},
- {q:'Pick your motto.',o:[
-   {t:'Ask forgiveness, not permission',v:V({risk:.8,voice:.3}),r:'navigator'},
-   {t:'Measure twice, cut once',v:V({risk:-.8,structure:.4,pace:-.4}),r:'analyst'},
-   {t:'Everyone in the room matters',v:V({orientation:-.5,voice:-.4}),r:'connector'},
-   {t:'Keep it simple, keep it moving',v:V({pace:.6,focus:-.5,orientation:.4}),r:'driver'}]}
+ {id:'roots',type:'country',q:'Where are your roots?',sub:'The country you call home — or the one your family does.'},
+ {id:'langs',type:'langs',q:'Which languages do you speak?',sub:'Tap all that apply. Add any that are missing — local languages very welcome.'},
+ {id:'years',type:'years',q:'How many years at DHL?',sub:'Roughly is fine. Round up proudly.'},
+ {id:'brew',type:'pick',q:'Fuel of choice?',o:['\u2615 Coffee','\U0001F375 Tea','\U0001F4A7 Neither \u2014 pure willpower']},
+ {id:'clock',type:'pick',q:'When does your brain switch on?',o:['\U0001F305 Early bird','\U0001F989 Night owl']},
+ {id:'seat',type:'pick',q:'On a plane, you want\u2026',o:['\U0001FA9F Window','\U0001F6B6 Aisle','\U0001F62C Middle (really)']},
+ {id:'recharge',type:'pick',q:'How do you recharge after work?',o:['\U0001F3C3 Moving \u2014 sport, gym, long walks','\U0001F373 Making \u2014 cooking, DIY, garden','\U0001F4FA Watching \u2014 series, football, films','\U0001F4DA Quiet \u2014 books, music, peace','\U0001F389 People \u2014 friends, family, out']},
+ {id:'power',type:'pick',q:'Pick one work superpower',o:['\U0001F5E3\uFE0F Speak every language','\U0001F300 Teleport anywhere','\u23F8\uFE0F Pause time in meetings','\U0001F52E Know where every parcel is']},
+ {id:'pizza',type:'pick',q:'Pineapple on pizza?',o:['\u2705 Yes, obviously','\u274C Absolutely not','\U0001F92B Only when nobody\u2019s watching']}
 ];
-const DEFAULT_WEIGHTS={dims:{pace:{w:1,mode:'align'},structure:{w:1.2,mode:'complement'},orientation:{w:.8,mode:'complement'},risk:{w:1,mode:'align'},voice:{w:1,mode:'complement'},focus:{w:1.2,mode:'complement'}},requiredRoles:[],style:'general collaboration',project:'a cross-functional improvement project'};
-const CHALLENGES={
- 'launch-service':{title:'Build the best team to launch a new DHL service',project:'pilots and proofs of concept',weights:{dims:{pace:{w:1,mode:'align'},structure:{w:1.6,mode:'complement'},orientation:{w:1.2,mode:'complement'},risk:{w:.8,mode:'complement'},voice:{w:1,mode:'complement'},focus:{w:1.4,mode:'complement'}},requiredRoles:['navigator','connector','builder']}},
- 'network-disruption':{title:'Build the best team to solve a network disruption',project:'fast recovery and root-cause work',weights:{dims:{pace:{w:1.8,mode:'align',bias:.6},structure:{w:1,mode:'complement'},orientation:{w:.6,mode:'align'},risk:{w:1.2,mode:'align'},voice:{w:1,mode:'complement'},focus:{w:1.5,mode:'align',bias:.5}},requiredRoles:['driver','analyst']}},
- 'customer-journey':{title:'Build the best team to fix a customer journey',project:'service redesign with customer testing',weights:{dims:{pace:{w:.8,mode:'align'},structure:{w:1,mode:'complement'},orientation:{w:1.6,mode:'complement'},risk:{w:1,mode:'complement'},voice:{w:1.4,mode:'complement'},focus:{w:1.2,mode:'complement'}},requiredRoles:['connector','analyst','navigator']}},
- 'rollout':{title:'Build the best team to roll out a tool across 20 countries',project:'structured, phased rollouts',weights:{dims:{pace:{w:1.2,mode:'align'},structure:{w:1.6,mode:'align',bias:.5},orientation:{w:1.2,mode:'complement'},risk:{w:1.4,mode:'align',bias:-.4},voice:{w:1,mode:'complement'},focus:{w:1.2,mode:'complement'}},requiredRoles:['driver','builder','connector']}},
- 'peak-season':{title:'Build the best team to run a peak-season war room',project:'high-tempo operations with clear roles',weights:{dims:{pace:{w:1.8,mode:'align',bias:.7},structure:{w:1.2,mode:'complement'},orientation:{w:.8,mode:'complement'},risk:{w:1,mode:'align'},voice:{w:1.2,mode:'complement'},focus:{w:1,mode:'complement'}},requiredRoles:['driver','connector','analyst']}}
-};
+const QIDX=new Map(QUESTIONS.map((q,i)=>[q.id,i]));
+const PICK_IDS=['brew','clock','seat','recharge','power','pizza'];
+const DEFAULT_WEIGHTS={};
+const CHALLENGES={};
 const AVATARS=['✈️','🚁','🚚','📦','🌍','📊','🚀','🛳️','🚂','🏍️','🛵','🚲','⛵','🛰️','🧭','🗺️','📡','🏗️','🏭','⚙️','🔧','🧰','📮','🏷️','⏱️','🔋','💡','🧲','🎯','🔭','🎈','🪁','🛶','🚜','🛸','🎪','🐘','🦉','🦊','🐝','🐢','🐬','🦅','🐺','🦁','🐧','🦒','🐙','🦋','🦩','🐎','🦌','🦜','🐨','🐼','🐯','🦓','🐆','🦔','🦦','🐋','🦘','🐿️','🦚','🐳','🦭','🐞','🦎','🐸','🦥','🐫','🦬'];
 const SIM_NAMES=['Ama','Kwame','Sofie','Lars','Priya','Tom','Yemi','Eva','Kofi','Lieke','Jonas','Fatou','Marta','Chidi','Noor','Bram','Zainab','Emeka','Ines','Thabo','Mei','Ruben','Aisha','Nils','Grace','Pieter','Adaeze','Lena','Sipho','Hanne','Kwesi','Julie','Tariq','Femke','Nana','Daan','Ayo','Elise','Musa','Sanne','Efua','Wout','Lamin','Mira','Kojo','Anouk','Zuri','Sven','Abena','Tessa','Idris','Roos','Yaw','Lotte','Sekou','Fleur','Akosua','Jelle','Mensah','Ilse','Omar','Britt','Dela','Koen','Nadia','Stijn','Esi','Vera','Kobby','Maud'];
-
 const FACTS=[
- {tag:'It started with a team',e:'💼',t:'DHL has no lone-genius founder story. It\u2019s literally three surnames — Dalsey, Hillblom and Lynn — flying paperwork to Honolulu in suitcases in 1969. Nobody remembers whose idea it was. That\u2019s how you know it was a good team.',s:'DHL history, 1969'},
- {tag:'Team of teams',e:'🤝',t:'One express shipment crosses the world through dozens of pairs of DHL hands — courier, gateway, aircrew, hub, customs, courier again. Most of them never meet. No group chat. Somehow still one team.',s:'Every single shipment'},
- {tag:'Teamwork at speed',e:'🏎️',t:'About 35 DHL motorsport specialists pack up all of Formula 1 — cars, garages, entire kitchens — fly it to another continent and rebuild it. Up to 1,200 tonnes, every two weeks. Your desk move suddenly seems very manageable.',s:'DHL Motorsports'},
- {tag:'Team first',e:'👩‍✈️',t:'DHL Australia opened in 1972 with a team that was almost entirely women — couriers included — and became market leader within a few years. Correlation? The data says yes.',s:'DHL Australia, 1972'},
- {tag:'One team, one course',e:'🎓',t:'Everyone at DHL Express does the same Certified International Specialist training. Couriers, country managers, everyone. Same course. No exceptions. Yes, even them. Yes — them too.',s:'CIS programme'},
- {tag:'Team ceremonies',e:'🧑‍🎓',t:'DHL\u2019s supervisor programme ends with a real graduation — caps, gowns, families in the audience, official photos. Grown adults cry. It is, frankly, wonderful.',s:'CIM graduation'},
- {tag:'Relay of the decade',e:'💉',t:'Over a billion vaccine doses, deep-frozen, on deadline, handed between DHL teams who never saw each other. The world\u2019s biggest relay race — and you thought your KPIs were stressful.',s:'DHL Group, 2021+'},
- {tag:'The legend',e:'📦',t:'In 2014, competitors unknowingly delivered huge boxes that thawed mid-route to reveal \u201cDHL IS FASTER\u201d in giant letters. DHL insists it wasn\u2019t behind it. The boxes were, however, very yellow.',s:'\u201cTrojan Mailing\u201d, 2014'},
- {tag:'Team on tour',e:'🎸',t:'When Coldplay tours the world, a DHL crew moves the whole show from city to city. Somewhere there\u2019s a manifest line reading \u201cgiant glowing planet, handle with care\u201d — and somebody signed for it.',s:'DHL x Coldplay'},
- {tag:'Furthest handover',e:'🌕',t:'In 2024 a DHL MoonBox with 100,000 people\u2019s keepsakes blasted off toward the Moon. Even that took three companies working together. Nobody ships to the Moon alone. (Also: no doorbell.)',s:'DHL MoonBox, 2024'},
- {tag:'Wider than the UN',e:'🌍',t:'DHL serves over 220 countries and territories. The UN has 193 members. So yes — DHL officially recognises more places than the United Nations. They know who to call.',s:'DHL Express'},
- {tag:'Made of colleagues',e:'🏆',t:'DHL Express has been ranked the #1 or #2 workplace on Earth six years running — and the ranking comes from employee surveys, so the award is literally made of colleagues. You\u2019re sitting in it right now. Well done, you.',s:'Great Place to Work, 2020\u20132025'},
- {tag:'Night shift, tight ship',e:'✈️',t:'Around 300 DHL aircraft fly every night: one of the world\u2019s biggest airlines with zero passengers, zero queues at boarding and zero crying babies. The 2am team is why the 9am promise holds.',s:'DHL Aviation'},
- {tag:'Only at DHL',e:'😜',t:'DHL\u2019s official culture is \u201cInsanely Customer Centric\u201d. Very few companies put the word \u201cinsanely\u201d into a KPI on purpose. Ours did. Presumably Legal read it twice.',s:'DHL Express ICCC'},
- {tag:'Room for everyone',e:'🫶',t:'DHL4HER and DHL4ALL exist so every kind of colleague can thrive here — because a network of 600,000 people only works if everyone actually gets to play.',s:'DHL Group'},
- {tag:'Team sport, literally',e:'🏉',t:'There\u2019s a DHL Stadium in Cape Town and the DHL Stormers run out in yellow and red. When DHL puts its name on a sport, it\u2019s a team sport. There is no DHL solo speed-walking.',s:'DHL & rugby'}
+ {tag:'It started with a team',e:'\U0001F9F3',t:'DHL began in 1969 with three founders personally flying documents from San Francisco to Honolulu \u2014 the name is just their surnames: Dalsey, Hillblom and Lynn.',s:"That's how you know it was a good team: nobody remembers who did what."},
+ {tag:'The legend',e:'\U0001F4E6',t:'In 2014 a rival shipped disguised ad boxes through DHL that changed on the way to say \u201CDHL is faster\u201D. DHL couriers unknowingly delivered them all over town.',s:'The boxes were, however, delivered very fast. And very yellow.'},
+ {tag:'Teamwork at speed',e:'\U0001F3CE\uFE0F',t:'DHL moves the entire Formula 1 circus \u2014 up to 1,200 tonnes of cars, fuel and kit \u2014 between countries in days, over 20 times a season.',s:'Your desk move suddenly seems very manageable.'},
+ {tag:'Wider than the UN',e:'\U0001F310',t:'DHL operates in over 220 countries and territories. The United Nations has 193 members.',s:'Somewhere, a UN intern is quietly fuming.'},
+ {tag:'Slowest delivery ever (on purpose)',e:'\U0001F6B4',t:'For Rugby World Cup 2019, DHL delivered the referee\u2019s whistle from London to Tokyo by bicycle \u2014 about 20,000 km through 27 countries, in just under 8 months.',s:'Slowest delivery in company history. Arrived exactly on time.'},
+ {tag:'The \u20AC250 T-shirt',e:'\U0001F455',t:'In 2016 fashion label Vetements sold a plain DHL-logo T-shirt for around \u20AC250 \u2014 and it sold out. The real staff shirt costs a few euros.',s:'Someone in this room is wearing high fashion and doesn\u2019t know it.'},
+ {tag:'Air support',e:'\U0001F681',t:'DHL\u2019s Parcelcopter drone flew medicines 60 km across Lake Victoria to an island in Tanzania in about 40 minutes \u2014 a trip the ferry does in six hours.',s:'A 2018 pilot project \u2014 and yes, \u201Cpilot\u201D is doing double duty there.'},
+ {tag:'Furthest handover',e:'\U0001F319',t:'DHL\u2019s MoonBox programme books space for small keepsakes on commercial Moon lander missions \u2014 the longest delivery route ever offered.',s:'384,400 km. Also: no doorbell.'},
+ {tag:'Night shift, tight ship',e:'\u2708\uFE0F',t:'While you sleep, DHL\u2019s network of around 300 aircraft criss-crosses the planet so that \u201Cnext day\u201D actually means next day.',s:'Like a red-eye flight, but with zero crying babies and a 9am promise to keep.'},
+ {tag:'Team on tour',e:'\U0001F3B8',t:'DHL tours with Coldplay, moving hundreds of tonnes of stage and lights across continents \u2014 with a push to do it more sustainably.',s:'Somewhere there\u2019s a waybill that says \u201Cone (1) giant glowing planet\u201D. Somebody signed for it.'},
+ {tag:'Made of colleagues',e:'\U0001F3C6',t:'DHL has repeatedly ranked among the very best workplaces on Earth in the Great Place to Work list \u2014 voted by the people who actually work here.',s:'That\u2019s you. Well done, you.'}
 ];
-
-
-
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-
-/** Build a style profile from a participant's answers ({q,o} pairs). */
+const hashStr=str=>{let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;return h;};
+const pickBy=(arr,seed)=>arr[hashStr(seed)%arr.length];
+/** Passport profile from answers ([{q:id,v}]). */
 function buildProfile(p){
-  const sum=[0,0,0,0,0,0],cnt=[0,0,0,0,0,0],roles={};
-  for(const a of p.answers){const opt=QUESTIONS[a.q].o[a.o];opt.v.forEach((x,i)=>{if(x!==0){sum[i]+=x;cnt[i]++;}});if(opt.r)roles[opt.r]=(roles[opt.r]||0)+1;}
-  const vec=sum.map((s,i)=>cnt[i]?clamp(s/cnt[i],-1,1):0);
-  let role=null,best=0;for(const r in roles)if(roles[r]>best){best=roles[r];role=r;}
-  return {id:p.id,vec,conf:p.answers.length/QUESTIONS.length,role,done:p.answers.length>=QUESTIONS.length};
+  const A={};for(const a of p.answers)A[a.q]=a.v;
+  const picks={};for(const k of PICK_IDS)if(A[k]!=null)picks[k]=A[k];
+  const langs=Array.isArray(A.langs)?A.langs:[];
+  const years=(typeof A.years==='number'&&isFinite(A.years))?A.years:null;
+  const count=p.answers.length;
+  return {id:p.id,roots:A.roots||null,langs,years,picks,count,conf:count/QUESTIONS.length,done:count>=QUESTIONS.length};
 }
-/** Pair compatibility in [0,1], scaled by how much each has answered. */
+/** Human-readable things two people share (for personal results). */
+function sharedBits(a,b){
+  const out=[];
+  const shared=a.langs.filter(l=>b.langs.includes(l));
+  if(shared.length)out.push(shared.length===1?`you both speak ${shared[0]}`:`you share ${shared.length} languages (${shared.slice(0,3).join(', ')})`);
+  if(a.roots&&a.roots===b.roots)out.push(`roots in ${countryName(a.roots)} ${flagOf(a.roots)}`);
+  const PK={brew:['coffee people','tea people','willpower-powered'],clock:['early birds','night owls'],seat:['window people','aisle people','middle-seat heroes'],pizza:['pro-pineapple','anti-pineapple','secretly pro-pineapple']};
+  for(const k of ['clock','brew','seat','pizza'])if(a.picks[k]!=null&&a.picks[k]===b.picks[k]&&PK[k]&&PK[k][a.picks[k]])out.push(`both ${PK[k][a.picks[k]]}`);
+  if(a.years!=null&&b.years!=null&&Math.abs(a.years-b.years)<=1&&a.years>=1)out.push('joined DHL around the same time');
+  return out;
+}
+/** Pair connection strength in [0,1] \u2014 how much two people SHARE (draws the network links). */
 function pairScore(a,b,w){
-  let num=0,den=0;
-  DIMS.forEach((d,i)=>{const cfg=w.dims[d];const diff=Math.abs(a.vec[i]-b.vec[i])/2;const f=cfg.mode==='complement'?diff:1-diff;num+=cfg.w*f;den+=cfg.w;});
-  let s=num/den;
-  if(a.role&&b.role&&a.role!==b.role)s+=.08;
-  // contrast: raw scores cluster near 0.5 for random pairs; stretch 0.47..0.82 onto 0..1
-  s=clamp((s-0.47)/0.20,0,1);
-  // confidence ramp: faint links appear from the 2nd-3rd answer, brightness is earned
-  return s*(0.35+0.65*Math.sqrt(a.conf*b.conf));
+  let sc=0;
+  const shared=a.langs.filter(l=>b.langs.includes(l));
+  sc+=Math.min(0.45,shared.length*0.22);
+  if(a.roots&&a.roots===b.roots)sc+=0.30;
+  let same=0,cnt=0;for(const k of PICK_IDS){if(a.picks[k]!=null&&b.picks[k]!=null){cnt++;if(a.picks[k]===b.picks[k])same++;}}
+  if(cnt)sc+=0.35*(same/cnt);
+  if(a.years!=null&&b.years!=null&&Math.abs(a.years-b.years)<=2)sc+=0.12;
+  sc=clamp(sc,0,1);
+  return sc*(0.35+0.65*Math.sqrt(a.conf*b.conf));
 }
-/** Group compatibility for a candidate team (array of profiles). */
+/** Group score = DIVERSITY: teams are assembled to mix roots, languages, tenure and habits. */
 function groupScore(members,s,w){
   const n=members.length;if(n<2)return 0.15*(members[0]?members[0].conf:0);
-  let ps=0,pc=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){ps+=s(members[i].id,members[j].id);pc++;}
-  const mean=ps/pc;
-  let cov=0,covN=0,clash=0,bias=0,biasN=0;
-  DIMS.forEach((d,i)=>{const cfg=w.dims[d];let mn=1,mx=-1,sum=0;for(const m of members){mn=Math.min(mn,m.vec[i]);mx=Math.max(mx,m.vec[i]);sum+=m.vec[i];}
-    if(cfg.mode==='complement'){covN++;if(mx-mn>=1.0)cov++;}else{clash=Math.max(clash,(mx-mn)/2);}
-    if(cfg.bias){bias+=cfg.bias*(sum/n);biasN+=Math.abs(cfg.bias);}});
-  const roles=new Set(members.map(m=>m.role).filter(Boolean));
-  let roleDiv=roles.size/Math.min(n,5);
-  if(w.requiredRoles&&w.requiredRoles.length){const have=w.requiredRoles.filter(r=>roles.has(r)).length;roleDiv=0.5*roleDiv+0.5*(have/w.requiredRoles.length);}
+  const roots=new Set(),langUnion=new Set();const years=[];
+  let pickPairs=0,pickDiff=0;
+  for(const m of members){if(m.roots)roots.add(m.roots);m.langs.forEach(l=>langUnion.add(l));if(m.years!=null)years.push(m.years);}
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const a=members[i],b=members[j];
+    for(const k of ['brew','clock','recharge','power']){if(a.picks[k]!=null&&b.picks[k]!=null){pickPairs++;if(a.picks[k]!==b.picks[k])pickDiff++;}}}
+  const rootsDiv=roots.size?(roots.size-1)/Math.max(1,Math.min(n,5)-1):0;
+  const langRich=Math.min(1,langUnion.size/(n+2));
+  const ySpread=years.length>=2?Math.min(1,(Math.max(...years)-Math.min(...years))/12):0;
+  const pickMix=pickPairs?pickDiff/pickPairs:0;
+  let common=0;const withL=members.filter(m=>m.langs.length);
+  if(withL.length>=2){for(const l of withL[0].langs){if(withL.every(m=>m.langs.includes(l))){common=1;break;}}}
   const conf=members.reduce((a,m)=>a+m.conf,0)/n;
-  return (0.55*mean+0.20*(covN?cov/covN:0)*conf+0.15*roleDiv*conf-0.10*clash+(biasN?0.10*bias/biasN:0));
+  return (0.30*rootsDiv+0.25*langRich+0.18*ySpread+0.15*pickMix+0.12*common)*conf;
 }
 let _teamSeq=1;
 /**
@@ -418,76 +387,47 @@ function assemble(profiles,size,w,prevTeams,opts){
   return {teams,pairs,S,s};
 }
 /* ---- phrase bank: several ways to say each pattern, picked per team so cards never read alike ---- */
-const PHRASE={
-  span:{
-    pace:['fast feet and steady hands in the same room','someone to hit the gas and someone to check the mirrors','sprinters and marathoners sharing one finish line','espresso and camomile on the same tray'],
-    structure:['planners who love a list and explorers who love a blank page','one half draws the map, the other half walks off it','a plan-first crew paired with a "let’s find out" crew','Gantt charts and gut feelings, finally in one room','some pack the night before, some pack in the taxi'],
-    orientation:['people who watch the people and people who watch the goal','heart and scoreboard, both covered','someone asking "how is everyone?" and someone asking "are we done?"','a team that will hit the target and remember your birthday'],
-    risk:['a "let’s try it" voice and a "show me first" voice','bold moves with a built-in seatbelt','someone lights the fuse, someone checks the fuse box','a parachute packer for every skydiver'],
-    voice:['talkers and listeners in a healthy ratio','early speakers and late summarisers','the ones who open the meeting and the ones who close it properly','loud ideas and quiet corrections, both welcome'],
-    focus:['big-picture dreamers and detail detectives','telescope and microscope on the same desk','someone sees the forest, someone counts the trees','headline writers and footnote readers','one eye on the horizon, one on the spreadsheet']},
-  lean:{
-    pace:[['a team that likes to get it right rather than get it Friday','no rushing here — careful, thorough, unhurried'],['a team that moves before the meeting invite arrives','fast by default, faster when it matters']],
-    structure:[['comfortable improvising — the plan is more of a mood','explorers first, planners never'],['a plan for everything, including the plan','lists, timelines and a colour-coded backup']],
-    orientation:[['people first — the work follows','strong on looking after each other'],['eyes on the goal, always','task-focused and hard to distract']],
-    risk:[['prefers proof before the leap','careful with new things, in a good way'],['happy to try first and learn second','a healthy appetite for the unknown']],
-    voice:[['a quiet room that thinks before it speaks','more listening than talking — rare and valuable'],['a lively room — ideas arrive out loud','strong opinions, warmly delivered']],
-    focus:[['big-picture thinkers, all of them','vision-heavy and proud of it'],['detail people — nothing slips past','precise, thorough, slightly terrifying to typos']]},
-  shared:{
-    pace:['everyone runs at the same speed, so nobody’s tapping their foot','one shared tempo — no traffic jams','matching pace, which saves about a hundred arguments'],
-    risk:['the same comfort level with risk, so decisions won’t stall','they’ll agree on how bold to be — half the battle','a shared feel for risk: no brakes-versus-gas fights'],
-    structure:['same instinct for how much plan is enough','they agree on how much structure the day needs'],
-    orientation:['same idea of what matters most'],voice:['a similar rhythm in conversation'],focus:['zoomed in at the same level']},
-  watch:{
-    pace:[['Watch out: careful and thorough is great — just put a date on the decision.','Watch out: this team will still be discussing option B at the deadline. Set a timer.'],['Watch out: this team will finish early and immediately start three new things.','Watch out: fast is fun. Someone check the address before it ships.']],
-    structure:[['Watch out: nobody here loves writing the plan down. Appoint a scribe by rock-paper-scissors.','Watch out: brilliant improvisers. Buy a whiteboard anyway.'],['Watch out: the plan may become the project. Schedule one reckless hour.','Watch out: colour-coded to the teeth. Leave one box empty for surprises.']],
-    orientation:[['Watch out: meetings may turn into tea parties. Set a timer.','Watch out: lovely people, lovely chats. Who’s holding the deadline?'],['Watch out: all goal, no gossip. Book a coffee that isn’t about work.','Watch out: results-first is great. Say something nice to each other on Wednesdays.']],
-    risk:[['Watch out: waiting for proof can look like waiting. Pick a small experiment.','Watch out: very safe hands. Let one wild idea through per week.'],['Watch out: keep a fire extinguisher handy. Metaphorically. Probably.','Watch out: bold is good. Tell someone before you press the big button.']],
-    voice:[['Watch out: someone has to go first. Flip a coin.','Watch out: a thoughtful, quiet room. Put the shy idea on the table anyway.'],['Watch out: everyone talks. Buy a talking stick.','Watch out: great energy. Agree who speaks last, and let them.']],
-    focus:[['Watch out: great vision — who’s checking the spreadsheet?','Watch out: big dreams. Assign one person to read the small print.'],['Watch out: lovely details. Schedule one "why are we doing this?" moment.','Watch out: nothing slips past this team. Occasionally look up from the checklist.']]},
-  balanced:['Watch out: suspiciously well balanced. Someone still has to make the coffee.','Watch out: nothing to watch out for. Which is exactly when to double-check the address.','Watch out: this team agrees on everything except lunch. Decide lunch first.','Watch out: balanced teams finish the work and then argue about the font. Pick the font now.'],
-  style:{ff:['The Pit Crew','Sprint & Polish','Fast Planners Inc.','The Express Lane','Plan at Speed'],fe:['The Improv Troupe','Ready, Fire, Aim','The Espresso Shots','The Jazz Band','Ship It Friday'],sp:['The Swiss Watch','Steady & Organised','The Slow Cook','The Air Traffic Controllers','Measure Twice Ltd.'],se:['The Deep Divers','Explore, Then Commit','The Careful Wanderers','The Field Researchers','Slow Road, Good Map']}
-};
-const hashStr=str=>{let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;return h;};
-const pickBy=(arr,seed)=>arr[hashStr(seed)%arr.length];
-/**
- * Positive, capability-neutral team narrative. `ctx.used` carries the dimensions the previous card talked about,
- * so consecutive cards don't say the same thing.
- */
+const NICKS={langs:['The Interpreters','The Babel Crew','The Translation Desk'],roots:['The World Tour','The Atlas Crew','Team Passport'],years:['The Long Haulers','Old Guard, New Wave','Decades United'],clock:['The Round-the-Clock Crew','24-Hour Coverage'],coffee:['The Espresso Line','Fuelled by Coffee'],tea:['The Tea Council','Steeped in Wisdom'],mix:['The Full Mix','The Combination Lock','The Sampler Box','One of Everything']};
+/** Passport-based team narrative. Returns the same shape the cards expect. */
 function narrate(team,profiles,w,challenge,ctx){
-  ctx=ctx||{};const used=ctx.used||new Set();
-  const members=team.members.map(id=>profiles.get(id)).filter(Boolean);
-  const n=members.length;if(!n)return null;
+  ctx=ctx||{};const M=team.members.map(id=>profiles.get(id)).filter(Boolean);const n=M.length;if(!n)return null;
   const seed='t'+team.id+'-'+team.members.slice().sort().join('');
-  const facts=[],leans=[];
-  DIMS.forEach((d,i)=>{const cfg=w.dims[d];let mn=1,mx=-1,sum=0;for(const m of members){mn=Math.min(mn,m.vec[i]);mx=Math.max(mx,m.vec[i]);sum+=m.vec[i];}
-    const mean=sum/n,spread=mx-mn;
-    if(cfg.mode==='complement'&&spread>=1.0)facts.push({d,kind:'span',weight:cfg.w*spread*1.15});
-    else if(Math.abs(mean)>0.3){facts.push({d,kind:'lean',side:mean>0?1:0,weight:cfg.w*Math.abs(mean)});if(Math.abs(mean)>0.42&&spread<1.1)leans.push({d,side:mean>0?1:0,m:Math.abs(mean)});}
-    if(cfg.mode==='align'&&spread<0.8&&Math.abs(mean)<=0.3)facts.push({d,kind:'shared',weight:cfg.w*(1-spread)*0.9});});
-  for(const f of facts)if(used.has(f.d))f.weight*=0.55;              // don't echo the previous card
-  for(const f of facts)f.weight*=0.85+0.30*((hashStr(seed+f.d+'w')%100)/100); // a little per-team variety among near-equals
-  facts.sort((a,b)=>b.weight-a.weight);
-  // mix kinds (one span + one other reads best)
-  const chosen=[];const top=facts[0]?facts[0].weight:1;
-  for(const f of facts){if(chosen.length>=2)break;if(used.has(f.d)&&f.weight<top*0.7)continue;
-    if(chosen.length&&chosen[0].kind===f.kind&&facts.some(g=>g!==f&&!chosen.includes(g)&&g.kind!==f.kind&&g.weight>=f.weight*0.6&&!used.has(g.d)))continue;chosen.push(f);}
-  for(const f of facts){if(chosen.length>=2)break;if(!chosen.includes(f))chosen.push(f);}
-  const lastText=ctx.lastText||new Set();
-  const text=f=>{const bank=f.kind==='span'?PHRASE.span[f.d]:f.kind==='shared'?PHRASE.shared[f.d]:PHRASE.lean[f.d][f.side];const fresh=bank.filter(x=>!lastText.has(x));return pickBy(fresh.length?fresh:bank,seed+f.d);};
-  const parts=chosen.map(text);ctx.lastText=new Set(parts);
-  const shape=hashStr(seed+'shape')%4;
-  let why=parts.length<2?parts.join(''):shape===0?`${parts[0]}, plus ${parts[1]}`:shape===1?`${parts[0]}. Also: ${parts[1]}`:shape===2?`${parts[1]} — and ${parts[0]}`:`${parts[0]}; on top of that, ${parts[1]}`;
-  if(!why)why='a mix that covers more ground than any one of them alone';
+  const roots=new Set(),langs=new Set();let yTot=0,yCnt=0,yMax=0,yMin=99;
+  const cnt=k=>{const c={};for(const m of M)if(m.picks[k]!=null)c[m.picks[k]]=(c[m.picks[k]]||0)+1;return c;};
+  for(const m of M){if(m.roots)roots.add(m.roots);m.langs.forEach(l=>langs.add(l));if(m.years!=null){yTot+=m.years;yCnt++;yMax=Math.max(yMax,m.years);yMin=Math.min(yMin,m.years);}}
+  const brew=cnt('brew'),clock=cnt('clock'),pizza=cnt('pizza'),seat=cnt('seat');
+  const bits=[];
+  if(langs.size>=3)bits.push({t:`between them they speak ${langs.size} languages`,w:langs.size});
+  if(roots.size>=2)bits.push({t:`their roots span ${roots.size} countries (${[...roots].slice(0,4).map(flagOf).join(' ')})`,w:roots.size+1});
+  if(yCnt>=2&&yTot>=10)bits.push({t:`they carry ${Math.round(yTot)} years of DHL between them`,w:3+yTot/10});
+  if(yCnt>=2&&yMax-yMin>=8)bits.push({t:`${Math.round(yMax)} years of experience sits next to fresh eyes \u2014 the best kind of pairing`,w:4});
+  if(clock[0]&&clock[1])bits.push({t:'early birds AND night owls, so this team is awake around the clock',w:3});
+  if(brew[0]&&brew[1])bits.push({t:'coffee and tea at one table: diplomatic relations, secured',w:2.5});
+  if(pizza[0]&&pizza[1])bits.push({t:'they disagree on pineapple pizza, which guarantees lively lunches',w:2});
+  if(seat[2])bits.push({t:`${seat[2]} of them genuinely chose the middle seat \u2014 trust them with anything`,w:2.2});
+  bits.sort((a,b)=>(b.w-a.w)+(((hashStr(seed+a.t)%10)-(hashStr(seed+b.t)%10))/25));
+  const chosen=bits.slice(0,2).map(b=>b.t);
+  let why=chosen.length?chosen.map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join('. '):'a mix that covers more ground than any one of them alone';
   why=why.charAt(0).toUpperCase()+why.slice(1)+'.';
-  ctx.used=new Set(chosen.map(f=>f.d));
-  const roles=[...new Set(members.map(m=>m.role).filter(Boolean))].map(r=>ROLE_TEXT[r].replace(/^(an?|the) /,''));
-  const pace=members.reduce((a,m)=>a+m.vec[0],0)/n,struct=members.reduce((a,m)=>a+m.vec[1],0)/n;
-  const style=pickBy(PHRASE.style[(pace>0?'f':'s')+(struct>0?(pace>0?'f':'p'):'e')],seed+'style');
-  leans.sort((a,b)=>b.m-a.m);const lw=leans.filter(l=>l.d!==ctx.lastWatch);const pickL=(lw.length?lw:leans).slice(0,2);
-  const L=pickL.length?pickBy(pickL,seed+'watch'):null;const watch=L?pickBy(PHRASE.watch[L.d][L.side],seed+'wtext'):pickBy(PHRASE.balanced,seed+'bal');ctx.lastWatch=L?L.d:null;
-  const project=challenge?challenge.project:(pace>0?'pilots and quick wins':'process redesign and quality work');
-  return {why,roles,style,watch,project};
+  let style;
+  if(langs.size>=5)style=pickBy(NICKS.langs,seed);
+  else if(roots.size>=3)style=pickBy(NICKS.roots,seed);
+  else if(yTot>=30)style=pickBy(NICKS.years,seed);
+  else if(clock[0]&&clock[1])style=pickBy(NICKS.clock,seed);
+  else if(brew[0]&&!brew[1])style=pickBy(NICKS.coffee,seed);
+  else if(brew[1]&&!brew[0])style=pickBy(NICKS.tea,seed);
+  else style=pickBy(NICKS.mix,seed);
+  const watches=[];
+  if(brew[0]&&!brew[1]&&!brew[2])watches.push('Watch out: an all-coffee team. Decisions made before 09:00 are legally binding.');
+  if(brew[1]&&!brew[0])watches.push('Watch out: an all-tea team. Nothing will be rushed, and that is a promise.');
+  if(clock[1]&&!clock[0])watches.push('Watch out: all night owls. Schedule nothing before 10:00. Nothing.');
+  if(clock[0]&&!clock[1])watches.push('Watch out: all early birds. By 15:00 this team runs on fumes and biscuits.');
+  if(pizza[0]&&!pizza[1]&&!pizza[2])watches.push('Watch out: unanimous on pineapple pizza. Too much agreement \u2014 appoint a devil\u2019s advocate.');
+  if(langs.size>=5)watches.push('Watch out: with this many languages, the group chat will be a beautiful mystery.');
+  if(!watches.length){watches.push('Watch out: nothing to watch out for. Which is exactly when to double-check the address.','Watch out: this team agrees on everything except lunch. Decide lunch first.');}
+  const watch=pickBy(watches,seed+'w');
+  const statline=`${langs.size} language${langs.size===1?'':'s'} \u00B7 ${roots.size} root countr${roots.size===1?'y':'ies'}${yCnt?` \u00B7 ${Math.round(yTot)} DHL years`:''}`;
+  return {why,roles:[],style,watch,project:statline};
 }
 /* ENGINE-END */
 
@@ -556,7 +496,7 @@ function boot(m){mode=m;document.getElementById('stage').classList.remove('hidde
 
 /* ----- control wiring shared by the stage drawer and the host console ----- */
 function wireControls(dispatch){
-  const chSel=$('challenge');for(const k in CHALLENGES){const o=document.createElement('option');o.value=k;o.textContent=CHALLENGES[k].title.replace('Build the best team to ','');chSel.appendChild(o);}
+  const chSel=$('challenge');if(chSel){const row=chSel.closest('label')||chSel.parentElement;if(row)row.style.display='none';}
   chSel.onchange=e=>dispatch('challenge',e.target.value);
   $('teamSize').onchange=e=>dispatch('teamSize',+e.target.value);
   $('viewSel').onchange=e=>dispatch('view',e.target.value);
@@ -584,7 +524,7 @@ function renderStatus(st){
   if($('teamSize').value!==String(st.teamSize))$('teamSize').value=st.teamSize;
   if(st.view&&$('viewSel').value!==st.view)$('viewSel').value=st.view;
   if($('challenge').value!==(st.challenge||''))$('challenge').value=st.challenge||'';
-  $('plist').innerHTML=st.list.map(p=>`<div><b>${p.avatar} ${p.name}${p.sim?' <span style="opacity:.5">(sim)</span>':''}</b><span class="dots">${'●'.repeat(p.answered)}${'○'.repeat(QUESTIONS.length-p.answered)}</span><button class="kick" data-id="${p.id}" data-name="${p.name}" title="Remove">✕</button></div>`).join('')||'<div><span>Nobody has joined yet</span></div>';
+  $('plist').innerHTML=st.list.map(p=>`<div><b>${p.avatar} ${p.name}${p.sim?' <span style="opacity:.5">(sim)</span>':''}</b><span class="dots">${'●'.repeat(p.answered)}${'○'.repeat(Math.max(0,QUESTIONS.length-p.answered))}</span><button class="kick" data-id="${p.id}" data-name="${p.name}" title="Remove">✕</button></div>`).join('')||'<div><span>Nobody has joined yet</span></div>';
 }
 
 /* ---------------------------- STAGE ---------------------------- */
@@ -600,11 +540,23 @@ function startStage(){
   let W=0,H=0,DPR=1,t0=performance.now();
 
   /* ----- data ----- */
+  const SIM_ROOTS=['GH','GH','NG','NG','KE','ZA','ZA','BE','BE','NL','DE','FR','TZ','UG','CI','SN','CM','ET','ZM','ZW','RW','GB','PT','ES','IN','MA','EG','US','IT','PL'];
+  const SIM_LANGS={GH:['Twi','Fante','Ga','Ewe','Hausa'],NG:['Yoruba','Igbo','Hausa','Pidgin'],KE:['Swahili','Kikuyu','Luo'],TZ:['Swahili'],UG:['Luganda','Swahili'],ZA:['Zulu','Xhosa','Afrikaans','Sesotho'],ZM:['Bemba','Chewa'],ZW:['Shona','Ndebele'],RW:['Kinyarwanda','French'],CI:['French','Bambara'],SN:['French','Wolof'],CM:['French'],ET:['Amharic','Oromo'],MA:['Arabic','French'],EG:['Arabic'],BE:['Dutch','French'],NL:['Dutch'],DE:['German'],FR:['French'],PT:['Portuguese'],ES:['Spanish'],IT:['Italian'],PL:['Polish'],IN:['Hindi','Tamil'],GB:[],US:[]};
+  function makeSimPlan(){
+    const roots=pick(SIM_ROOTS);
+    const pool=[...(SIM_LANGS[roots]||[])];
+    const langs=['English'];const extra=Math.min(pool.length,Math.floor(rnd(0,3.2)));
+    for(let i=0;i<extra;i++)langs.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+    const years=Math.round(Math.min(28,-6*Math.log(Math.random()))*2)/2;
+    const plan={roots,langs,years};
+    for(const q of QUESTIONS)if(q.type==='pick')plan[q.id]=Math.floor(Math.random()*q.o.length);
+    return plan;
+  }
   function addParticipant({avatar,name,token,sim}){
     if([...state.participants.values()].some(p=>p.avatar===avatar))return null;
     const id='p'+(state.nextId++);
     const p={id,avatar,name,token:token||null,sim:!!sim,answers:[],joinedAt:performance.now(),nextAnswer:performance.now()+rnd(800,2500)};
-    if(sim){const centre=pick([[.6,-.5,.2,.6,.4,-.4],[-.5,.7,.1,-.6,-.3,.6],[-.2,-.3,-.8,.2,-.6,-.2],[.7,.5,.6,.1,.7,.3],[-.6,.1,.3,-.7,-.2,.7],[.3,-.7,-.3,.8,.5,-.7]]);p.target=centre.map(x=>clamp(x+rnd(-.45,.45),-1,1));}
+    if(sim)p.simPlan=makeSimPlan();
     state.participants.set(id,p);
     const ang=rnd(0,Math.PI*2),rad=Math.min(W,H)*rnd(.15,.42);
     const nd={id,x:W/2+Math.cos(ang)*rad,y:-40,vx:0,vy:rnd(1,3),spawn:performance.now(),pulse:0,nameA:0,seed:Math.random()*1000};
@@ -612,19 +564,24 @@ function startStage(){
     state.nodes.set(id,nd);if(isPlaneView())assignSeats();
     broadcastAvatars();state.dirty=true;refreshList();return p;
   }
-  function recordAnswer(p,q,o){
+  function validAnswer(qid,v){const q=QUESTIONS[QIDX.get(qid)];if(!q)return false;
+    if(q.type==='pick')return Number.isInteger(v)&&v>=0&&v<q.o.length;
+    if(q.type==='country')return typeof v==='string'&&/^[A-Z]{2}$/.test(v);
+    if(q.type==='langs')return Array.isArray(v)&&v.length>0&&v.length<=20&&v.every(x=>typeof x==='string'&&x.length>0&&x.length<=24);
+    if(q.type==='years')return typeof v==='number'&&isFinite(v)&&v>=0&&v<=50;
+    return false;}
+  function recordAnswer(p,qid,v){
     if(state.phase==='revealed')return false;
-    if(q<0||q>=QUESTIONS.length||o<0||o>=QUESTIONS[q].o.length)return false;
-    if(p.answers.some(a=>a.q===q))return false;
-    p.answers.push({q,o});const n=state.nodes.get(p.id);if(n)n.pulse=1;
+    if(!validAnswer(qid,v))return false;
+    if(p.answers.some(a=>a.q===qid))return false;
+    if(Array.isArray(v))v=v.slice(0,20).map(x=>String(x).slice(0,24));
+    p.answers.push({q:qid,v});const n=state.nodes.get(p.id);if(n)n.pulse=1;
     if(p.answers.length>=QUESTIONS.length)p.doneAt=performance.now();
     state.dirty=true;return true;
   }
   function simAnswer(p){
-    const q=p.answers.length;if(q>=QUESTIONS.length)return;
-    const opts=QUESTIONS[q].o;const scores=opts.map(o=>Math.exp(2.2*o.v.reduce((a,x,i)=>a+x*p.target[i],0)));
-    const tot=scores.reduce((a,b)=>a+b,0);let r=Math.random()*tot,idx=0;for(;idx<scores.length-1;idx++){r-=scores[idx];if(r<=0)break;}
-    recordAnswer(p,q,idx);
+    const i=p.answers.length;if(i>=QUESTIONS.length||!p.simPlan)return;
+    const q=QUESTIONS[i];recordAnswer(p,q.id,p.simPlan[q.id]);
   }
 
   /* ----- matching ----- */
@@ -662,8 +619,32 @@ function startStage(){
   /* ----- facts feed: one card at a time on the left while people answer ----- */
   const factOrder=(()=>{const a=FACTS.map((_,i)=>i);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;})();
   const FACT_MS=14000;
+  let roomIdx=-1,factTick=0;
+  function roomFacts(){
+    const ps=[...state.participants.values()];const MIN=5;
+    const val=id=>ps.map(p=>{const a=p.answers.find(x=>x.q===id);return a?a.v:null;}).filter(v=>v!=null);
+    const out=[];
+    const L=val('langs');if(L.length>=MIN){const set=new Set();L.forEach(l=>l.forEach(x=>set.add(x)));
+      const sample=[...set].filter(x=>x!=='English').slice(0,3).join(', ');
+      out.push({e:'\u{1F5E3}\uFE0F',t:`This room speaks <b>${set.size} languages</b>${sample?` \u2014 including ${sample}`:''}.`});
+      const maxL=Math.max(...L.map(l=>l.length));if(maxL>=4)out.push({e:'\u{1F3C6}',t:`Someone in this room speaks <b>${maxL} languages</b>. Show-off. (Respect.)`});}
+    const R=val('roots');if(R.length>=MIN){const set=new Set(R);out.push({e:'\u{1F30D}',t:`Roots in <b>${set.size} countr${set.size===1?'y':'ies'}</b> ${[...set].slice(0,7).map(flagOf).join(' ')} \u2014 one room.`});}
+    const Y=val('years');if(Y.length>=MIN){const tot=Math.round(Y.reduce((a,b)=>a+b,0));
+      out.push({e:'\u{1F4E6}',t:`Together this room carries <b>${tot} years of DHL</b>. That is a LOT of peak seasons.`});
+      const mx=Math.max(...Y);if(mx>=10)out.push({e:'\u{1F396}\uFE0F',t:`Longest serving in the room: <b>${Math.round(mx)} years</b>. A round of applause is appropriate.`});}
+    const pct=id=>{const v=val(id);if(v.length<MIN)return null;const c={};v.forEach(x=>c[x]=(c[x]||0)+1);return {c,n:v.length};};
+    const brew=pct('brew');if(brew){const p1=i=>Math.round(100*(brew.c[i]||0)/brew.n);out.push({e:'\u2615',t:`Coffee <b>${p1(0)}%</b> \u00B7 tea <b>${p1(1)}%</b>${brew.c[2]?` \u2014 and ${brew.c[2]} running on pure willpower`:''}.`});}
+    const clock=pct('clock');if(clock)out.push({e:'\u{1F305}',t:`<b>${clock.c[0]||0} early birds</b> vs <b>${clock.c[1]||0} night owls</b>. Meetings at 11:00 it is.`});
+    const seat=pct('seat');if(seat)out.push({e:'\u2708\uFE0F',t:`Window ${Math.round(100*(seat.c[0]||0)/seat.n)}%, aisle ${Math.round(100*(seat.c[1]||0)/seat.n)}%${seat.c[2]?` \u2014 and <b>${seat.c[2]} heroes chose the middle seat</b>`:''}.`});
+    const re=pct('recharge');if(re){const names=['moving','making things','watching things','peace and quiet','people'];let bi=0;for(const k in re.c)if(re.c[k]>(re.c[bi]||0))bi=k;out.push({e:'\u{1F50B}',t:`This room mostly recharges with <b>${names[bi]}</b>.`});}
+    const pw=pct('power');if(pw){const names=['speaking every language','teleporting','pausing time in meetings','knowing where every parcel is'];let bi=0;for(const k in pw.c)if(pw.c[k]>(pw.c[bi]||0))bi=k;out.push({e:'\u{1F9B8}',t:`Superpower of choice in this room: <b>${names[bi]}</b>.`});}
+    const pz=pct('pizza');if(pz)out.push({e:'\u{1F34D}',t:`Pineapple on pizza: <b>${pz.c[0]||0} yes</b>, <b>${pz.c[1]||0} no</b>${pz.c[2]?`, and ${pz.c[2]} \u201Conly when nobody's watching\u201D`:''}.`});
+    return out;
+  }
   function nextFact(){const card=$('factCard');card.classList.remove('in');
-    setTimeout(()=>{state.factIdx=(state.factIdx+1)%factOrder.length;const f=FACTS[factOrder[state.factIdx]];
+    setTimeout(()=>{factTick++;const rf=roomFacts();let f;
+      if(rf.length&&factTick%2===0){roomIdx=(roomIdx+1)%rf.length;const r=rf[roomIdx];f={tag:'THIS ROOM \u00B7 LIVE',e:r.e,t:r.t,s:'From your answers \u2014 totals only, never per person'};}
+      else{state.factIdx=(state.factIdx+1)%factOrder.length;f=FACTS[factOrder[state.factIdx]];}
       card.innerHTML=`<div class="kind"><i></i>${f.tag}</div><div class="emo">${f.e}</div><p>${f.t}</p><div class="src">${f.s}</div><div class="prog"><i id="factProg"></i></div>`;
       card.classList.add('in');const bar=$('factProg');requestAnimationFrame(()=>{bar.style.transition=`width ${FACT_MS-700}ms linear`;bar.style.width='100%';});},650);}
   function factsVisible(){return state.showFacts&&!state.reveal;}
@@ -1130,9 +1111,9 @@ function startStage(){
   function setPhase(ph){state.phase=ph;$('phaseLabel').textContent=ph==='gathering'?'Gathering':ph==='discovery'?'Discovery':'Revealed';send('phase',{phase:ph});
     if(ph==='discovery'){$('roomBox').classList.add('small');$('btnStart').textContent='Questions open';$('btnStart').disabled=true;for(const p of state.participants.values())p.nextAnswer=performance.now()+rnd(500,4000);}}
   function setChallenge(key){
-    state.challenge=key?CHALLENGES[key]:null;state.weights=key?CHALLENGES[key].weights:DEFAULT_WEIGHTS;
+    state.challenge=(key&&CHALLENGES[key])||null;state.weights=DEFAULT_WEIGHTS;
     const chip=$('chChip');
-    if(key){banner(CHALLENGES[key].title,'The teams are reorganising around this challenge');chip.textContent=CHALLENGES[key].title.replace('Build the best team to ','');chip.classList.add('show');}
+    if(state.challenge){banner(state.challenge.title,'The teams are reorganising around this challenge');chip.textContent=state.challenge.title;chip.classList.add('show');}
     else{chip.classList.remove('show');}
     for(const l of state.links.values())l.shown*=0.2;
     state.slots=new Map();state.blockOf=new Map();state.relaxUntil=performance.now()+2500;state.alpha=0.6;
@@ -1169,17 +1150,17 @@ function startStage(){
     // personal results to real participants
     const byId=new Map(all.map(p=>[p.id,p]));state.lastResults=new Map();
     for(const p of all){if(!p.token)continue;
-      const matches=all.filter(o=>o.id!==p.id).map(o=>({id:o.id,s:s(p.id,o.id)})).sort((a,b)=>b.s-a.s).slice(0,3).map(m=>({avatar:byId.get(m.id).avatar,name:byId.get(m.id).name,tier:tier(m.s)}));
+      const me=profiles.get(p.id);
+      const matches=all.filter(o=>o.id!==p.id).map(o=>({id:o.id,s:s(p.id,o.id)})).sort((a,b)=>b.s-a.s).slice(0,3).map(m=>{const other=profiles.get(m.id);const bits=(me&&other)?sharedBits(me,other):[];return {avatar:byId.get(m.id).avatar,name:byId.get(m.id).name,tier:tier(m.s),shared:bits.slice(0,2).join(' \u00B7 ')};});
       const t=teams.find(t=>t.members.includes(p.id));
-      const me=profiles.get(p.id);const lean=DIMS.map((d,i)=>({d,v:me.vec[i]})).filter(x=>Math.abs(x.v)>0.35).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)).slice(0,3).map(x=>POLES[x.d][x.v>0?1:0]);
-      const res2={matches,team:t?{label:t.label,members:t.members.filter(m=>m!==p.id).map(m=>({avatar:byId.get(m).avatar,name:byId.get(m).name}))}:null,narrative:t?state.narratives.get(t.id):null,lean,role:me.role};
+      const res2={matches,team:t?{label:t.label,members:t.members.filter(m=>m!==p.id).map(m=>({avatar:byId.get(m).avatar,name:byId.get(m).name}))}:null,narrative:t?state.narratives.get(t.id):null};
       state.lastResults.set(p.token,res2);send('results',{token:p.token,results:res2});}
   }
   function tickReveal(now){const el=(now-state.reveal.t0)/1000;if(el>2.8)state.reveal.labelA=Math.min(1,state.reveal.labelA+0.03);if(el>3.8&&!state.reveal.cards){state.reveal.cards=true;showCards();}}
   function showCards(){const box=$('teamCards');box.innerHTML='';const teams=state.finalTeams;const per=3;const start=state.cardIndex*per;const slice=teams.slice(start,start+per);
     slice.forEach((t,i)=>{const nar=state.narratives.get(t.id);const card=document.createElement('div');card.className='tcard';
       card.innerHTML=`<h3><i style="background:rgb(${tintOf(t.id)})"></i>Team ${t.label}</h3><div class="style">${nar.style}</div><div class="members">${t.members.map(m=>{const p=state.participants.get(m);return `<span><em>${p.avatar}</em>${p.name}</span>`;}).join('')}</div>
-        <p><b>Why</b> — ${nar.why}</p>${nar.roles.length?`<p><b>Roles</b> — ${nar.roles.join(', ')}</p>`:''}<p><b>Best for</b> — ${nar.project}</p>${nar.watch?`<p style="color:var(--yellow)">${nar.watch}</p>`:''}`;
+        <p><b>The mix</b> — ${nar.why}</p><p><b>Between them</b> — ${nar.project}</p>${nar.watch?`<p style="color:var(--yellow)">${nar.watch}</p>`:''}`;
       box.appendChild(card);setTimeout(()=>card.classList.add('in'),120+i*700);});
     if(teams.length>per){const nav=document.createElement('div');nav.className='tnav';nav.innerHTML=`<button id="prevT" ${start===0?'disabled':''}>Previous</button><button id="nextT" ${start+per>=teams.length?'disabled':''}>Next teams</button>`;box.appendChild(nav);
       nav.querySelector('#prevT').onclick=()=>{state.cardIndex--;showCards();};nav.querySelector('#nextT').onclick=()=>{state.cardIndex++;showCards();};}
@@ -1230,10 +1211,10 @@ function startStage(){
         const avatar=taken?AVATARS.find(a=>![...state.participants.values()].some(x=>x.avatar===a)):m.avatar;
         if(!avatar){send('full',{token:m.token});return;}
         p=addParticipant({avatar,name:m.name,token:m.token});toast(`${p.avatar} ${p.name} joined`);}
-      for(const a of (m.answers||[]))recordAnswer(p,a.q,a.o);
+      for(const a of (m.answers||[]))recordAnswer(p,a.q,a.v);
       send('synced',{token:m.token,avatar:p.avatar,answered:p.answers.length,phase:state.phase,changed:p.avatar!==m.avatar});
       if(state.phase==='revealed'&&state.lastResults&&state.lastResults.has(m.token))send('results',{token:m.token,results:state.lastResults.get(m.token)});}
-    else if(m.type==='answer'){const p=[...state.participants.values()].find(x=>x.token===m.token);if(!p){send('resync',{token:m.token});return;}const ok=recordAnswer(p,m.q,m.o);send('ack',{token:m.token,answered:p.answers.length,accepted:ok,phase:state.phase});}
+    else if(m.type==='answer'){const p=[...state.participants.values()].find(x=>x.token===m.token);if(!p){send('resync',{token:m.token});return;}const ok=recordAnswer(p,m.q,m.v);send('ack',{token:m.token,answered:p.answers.length,accepted:ok,phase:state.phase});}
     else if(m.type==='cmd'){state.hostSeen=true;$('drawer').classList.remove('open');if(m.name==='fullscreen'){toast('Press F on the stage window for full screen');return;}if(actions[m.name])actions[m.name](m.arg);refreshList();}
     else if(m.type==='host-hello'){state.hostSeen=true;$('drawer').classList.remove('open');$('gearBtn').classList.remove('show');refreshList();}
   });
@@ -1268,7 +1249,8 @@ function startParticipant(){
   const P={step:needCode?'code':'avatar',taken:[],noticeInit:'',avatar:saved?saved.avatar:null,name:saved?saved.name:'',answers:saved?saved.answers:[],joined:!!(saved&&saved.name),connected:false,phase:'gathering',results:null,notice:''};
   const persist=()=>localStorage.setItem(KEY,JSON.stringify({avatar:P.avatar,name:P.name,answers:P.answers}));
   const sync=(live)=>send('sync',{token,avatar:P.avatar,name:P.name,answers:P.answers,live:!!live});
-  const nextStep=()=>{if(P.results)P.step='results';else if(!P.joined)P.step=P.avatar?'name':'avatar';else if(P.answers.length>=QUESTIONS.length)P.step='done';else P.step='question';render();};
+  const nextStep=()=>{if(P.answers&&P.answers.some(a=>typeof a.q!=='string')){P.answers=[];persist();}
+    if(P.results)P.step='results';else if(!P.joined)P.step=P.avatar?'name':'avatar';else if(P.answers.length>=QUESTIONS.length)P.step='done';else P.step='question';render();};
   const linkNote=()=>P.connected?'':`<p class="note">Not connected to a big screen right now — your answers are saved on this device and appear on the stage as soon as it's open on this computer.</p>`;
   const render=()=>{
     const notice=(P.noticeInit||P.notice)?`<p class="lead" style="color:#B3000C">${P.noticeInit||P.notice}</p>`:'';P.notice='';
@@ -1283,15 +1265,35 @@ function startParticipant(){
       const inp=$('nm');inp.focus();inp.onkeydown=e=>{if(e.key==='Enter')$('join').click();};
       $('join').onclick=()=>{const n=inp.value.trim();if(n.length<2){inp.focus();return;}P.name=n;P.joined=true;persist();if(P.connected)sync(true);nextStep();};
       $('back').onclick=()=>{P.step='avatar';render();};}
-    else if(P.step==='question'){const q=QUESTIONS[P.answers.length];body.innerHTML=`${notice}<div class="prog"><em>${P.avatar}</em><div class="pd">${QUESTIONS.map((_,i)=>`<i class="${i<P.answers.length?'on':''}"></i>`).join('')}</div><span>${P.answers.length+1} / ${QUESTIONS.length}</span></div><h2>${q.q}</h2>${q.o.map((o,i)=>`<button data-o="${i}">${o.t}</button>`).join('')}${linkNote()}`;
-      body.querySelectorAll('button').forEach(b=>b.onclick=()=>{const qi=P.answers.length;P.answers.push({q:qi,o:+b.dataset.o});persist();if(P.connected)send('answer',{token,q:qi,o:+b.dataset.o});nextStep();});}
-    else if(P.step==='done'){body.innerHTML=`<div class="bigav">${P.avatar}</div><h2>That's all ten, ${P.name}.</h2><p class="lead">Watch the big screen — your avatar is finding its people. Your matches appear here at the reveal.</p>${linkNote()}<button id="restart" style="margin-top:24px;text-align:center;color:var(--text-dim)">Start over on this device</button>`;
+    else if(P.step==='question'){const q=QUESTIONS[P.answers.length];
+      const head=`${notice}<div class="prog"><em>${P.avatar}</em><div class="pd">${QUESTIONS.map((_,i)=>`<i class="${i<P.answers.length?'on':''}"></i>`).join('')}</div><span>${P.answers.length+1} / ${QUESTIONS.length}</span></div><h2>${q.q}</h2>${q.sub?`<p class="lead">${q.sub}</p>`:''}`;
+      const submit=v=>{P.answers.push({q:q.id,v});persist();if(P.connected)send('answer',{token,q:q.id,v});nextStep();};
+      if(q.type==='pick'){body.innerHTML=head+q.o.map((o,i)=>`<button data-o="${i}">${o}</button>`).join('')+linkNote();
+        body.querySelectorAll('button[data-o]').forEach(b=>b.onclick=()=>submit(+b.dataset.o));}
+      else if(q.type==='country'){body.innerHTML=head+`<input type="text" id="csearch" placeholder="Type to search\u2026" autocomplete="off"><div class="clist" id="clist"></div>`;
+        const list=$('clist'),inp=$('csearch');
+        const draw=f=>{const ff=f.trim().toLowerCase();const rows=COUNTRIES.filter(c=>!ff||c.n.toLowerCase().includes(ff)).slice(0,ff?40:300);
+          list.innerHTML=rows.map(c=>`<button data-c="${c.c}"><em>${flagOf(c.c)}</em>${c.n}</button>`).join('')||'<p class="lead" style="padding:12px">No match \u2014 try another spelling.</p>';
+          list.querySelectorAll('button').forEach(b=>b.onclick=()=>submit(b.dataset.c));};
+        inp.oninput=()=>draw(inp.value);draw('');inp.focus();}
+      else if(q.type==='langs'){if(!P.langSel)P.langSel=[];
+        body.innerHTML=head+`<div class="chips" id="chips"></div><div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="addlang" placeholder="Add another language\u2026" style="flex:1;margin:0" maxlength="24"><button id="addBtn" style="width:auto;margin:0;padding:0 18px">Add</button></div><button class="primary" id="langDone" style="margin-top:16px">That's all of them</button>`;
+        const chips=$('chips');
+        const drawChips=()=>{const all=[...new Set([...LANGS,...P.langSel])];chips.innerHTML=all.map(l=>`<button data-l="${l.replace(/"/g,'')}" class="${P.langSel.includes(l)?'on':''}">${l}</button>`).join('');
+          chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{const l=b.dataset.l;const i2=P.langSel.indexOf(l);if(i2>=0)P.langSel.splice(i2,1);else if(P.langSel.length<20)P.langSel.push(l);drawChips();});};
+        drawChips();
+        $('addBtn').onclick=()=>{const v=$('addlang').value.trim().slice(0,24);if(v&&!P.langSel.includes(v)&&P.langSel.length<20){P.langSel.push(v);$('addlang').value='';drawChips();}};
+        $('addlang').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('addBtn').click();}};
+        $('langDone').onclick=()=>{if(!P.langSel.length){P.notice='Pick at least one \u2014 even just English counts.';render();return;}const v=P.langSel.slice();P.langSel=null;submit(v);};}
+      else if(q.type==='years'){body.innerHTML=head+`<input type="number" id="yrs" min="0" max="50" step="0.5" placeholder="e.g. 7" inputmode="decimal"><button class="primary" id="yrsGo">Continue</button>`;
+        const inp=$('yrs');inp.focus();inp.onkeydown=e=>{if(e.key==='Enter')$('yrsGo').click();};
+        $('yrsGo').onclick=()=>{const v=parseFloat(inp.value);if(!isFinite(v)||v<0||v>50){P.notice='A number between 0 and 50, please.';render();return;}submit(Math.round(v*2)/2);};}}
+    else if(P.step==='done'){body.innerHTML=`<div class="bigav">${P.avatar}</div><h2>That's everything, ${P.name}.</h2><p class="lead">Watch the big screen — the room's story is building up there. Your team and matches appear here at the reveal.</p>${linkNote()}<button id="restart" style="margin-top:24px;text-align:center;color:var(--text-dim)">Start over on this device</button>`;
       $('restart').onclick=()=>{if(confirm('Clear your avatar, name and answers on this device?')){localStorage.removeItem(KEY);localStorage.removeItem('dtd-token-'+roomCode);location.reload();}};}
     else if(P.step==='results'){const r=P.results;body.innerHTML=`<div class="bigav">${P.avatar}</div><h2>${P.name}, here's what emerged</h2>
-      ${r.lean&&r.lean.length?`<div class="result"><h3>How you tend to work</h3><p style="margin:0;font-size:16px">${r.lean.join(' · ')}${r.role?` — ${ROLE_TEXT[r.role]}`:''}</p></div>`:''}
-      <div class="result"><h3>Your strongest collaboration matches</h3>${r.matches.map(m=>`<div class="match"><em>${m.avatar}</em><span>${m.name}</span><span class="lk">${['emerging','good fit','strong fit','very strong fit'][m.tier]}</span></div>`).join('')||'<p>Not enough participants yet.</p>'}</div>
-      ${r.team?`<div class="result"><h3>Your recommended team — Team ${r.team.label}</h3><div class="members" style="margin:6px 0 12px">${r.team.members.map(m=>`<span><em>${m.avatar}</em>${m.name}</span>`).join('')}</div><p style="margin:6px 0;font-size:14px;line-height:1.5"><b>${r.narrative.style}</b> — ${r.narrative.why}</p><p style="margin:6px 0;font-size:14px;line-height:1.5"><b>Best for</b> — ${r.narrative.project}</p>${r.narrative.watch?`<p style="margin:6px 0;font-size:14px;line-height:1.5;color:#7a6400">${r.narrative.watch}</p>`:''}</div>`:''}
-      <p class="note">These describe working preferences in this session — not ability or performance.</p>`;}
+      <div class="result"><h3>Most in common with</h3>${r.matches.map(m=>`<div class="match"><em>${m.avatar}</em><span>${m.name}${m.shared?`<br><small style="color:var(--text-dim)">${m.shared}</small>`:''}</span></div>`).join('')||'<p>Not enough participants yet.</p>'}</div>
+      ${r.team?`<div class="result"><h3>Your team — Team ${r.team.label}</h3><div class="members" style="margin:6px 0 12px">${r.team.members.map(m=>`<span><em>${m.avatar}</em>${m.name}</span>`).join('')}</div><p style="margin:6px 0;font-size:14px;line-height:1.5"><b>${r.narrative.style}</b> — ${r.narrative.why}</p><p style="margin:6px 0;font-size:14px;line-height:1.5"><b>Between you</b> — ${r.narrative.project}</p>${r.narrative.watch?`<p style="margin:6px 0;font-size:14px;line-height:1.5;color:#7a6400">${r.narrative.watch}</p>`:''}</div>`:''}
+      <p class="note">Just for fun — answers are shown only as room totals and are not stored after the session.</p>`;}
   };
   bus.addEventListener('message',ev=>{const m=ev.data;if(!m||!m.type)return;
     if(m.type==='avatars'){P.taken=m.taken.filter(a=>a!==P.avatar);if(P.step==='avatar')render();}
