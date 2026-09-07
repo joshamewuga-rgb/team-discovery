@@ -37,6 +37,12 @@ select,input[type=range],input[type=text],input[type=number]{font:inherit}
 .room{position:absolute;top:18px;right:26px;text-align:right;transition:transform .8s var(--ease),opacity .8s var(--ease)}
 .room .code{font-size:34px;font-weight:700;letter-spacing:.12em;font-variant-numeric:tabular-nums;line-height:1}
 .room .hint{font-size:12px;color:var(--ink-dim);margin-top:6px;line-height:1.4}
+.room .qr{background:#fff;padding:9px;border-radius:12px;margin:0 0 10px auto;width:max-content;line-height:0;box-shadow:0 8px 26px rgba(0,0,0,.35);transition:width .6s var(--ease),padding .6s var(--ease)}
+.room .qr svg{display:block;width:150px;height:150px;transition:width .6s var(--ease),height .6s var(--ease)}
+.room .qr:empty{display:none}
+.room.small .qr svg{width:96px;height:96px}
+.room.small .qr{padding:7px}
+.room .qrcap{font-size:11px;color:var(--ink-dim);margin:0 0 8px;text-align:right;letter-spacing:.06em;text-transform:uppercase}
 .room.small .code{font-size:20px}
 .chip{position:absolute;top:70px;left:26px;background:rgba(255,204,0,.12);color:var(--yellow);padding:8px 12px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid rgba(255,204,0,.3);transform:translateY(-8px);opacity:0;transition:all .5s var(--ease)}
 .chip.show{transform:none;opacity:1}
@@ -241,7 +247,7 @@ body.host .plist{max-height:none}
 <div id="stage" class="hidden">
   <canvas id="canvas"></canvas>
   <div class="brand"><img class="logo" alt="DHL"><div class="mark"></div><span class="wordmark" style="font-weight:700;font-size:15px">DHL</span><h1>Team Discovery</h1><span id="phaseLabel">Gathering</span></div>
-  <div class="room" id="roomBox"><div class="code" id="roomCode">------</div><div class="hint" id="roomHint">Join from the participant view on this computer</div></div>
+  <div class="room" id="roomBox"><div class="qr" id="qrBox"></div><div class="code" id="roomCode">------</div><div class="hint" id="roomHint">Join from the participant view on this computer</div></div>
   <div class="chip" id="chChip"></div>
   <div class="banner" id="banner"></div>
   <div class="bloons" id="bloons" aria-hidden="true"></div>
@@ -308,6 +314,159 @@ const HOBBY_OPTS=['\u{1F4DA} Reading','\u{1F373} Cooking','\u{1F3A7} Music','\u2
 const ROLE_OPTS=['\u{1F4CA} Business Analyst','\u{1F5C2}\uFE0F Program Manager','\u{1F3AF} Director','\u{1F396}\uFE0F VP','\u{1F9ED} Consultant'];
 const TALENT_OPTS=['\u{1F3B5} Music \u2014 playing or singing','\u{1F370} Cooking or baking','\u{1F3C5} Sport or coaching','\u{1F3A8} Art, design or crafts','\u{1F6E0}\uFE0F Fixing and building things','\u{1F4F7} Photography or video','\u270D\uFE0F Writing or storytelling','\u{1F3A4} Performing \u2014 stage, comedy, MC'];
 const GREAT_OPTS=['\u{1F91D} Trust and openness','\u{1F44F} Recognition for good work','\u{1F4C8} Room to learn and grow','\u{1F604} Humour and a bit of fun','\u{1F9ED} Clear direction','\u{1F54A}\uFE0F Flexibility and balance','\u{1F442} Being properly listened to'];
+/* ---------------------------------------------------------------------------
+   Minimal QR encoder: byte mode, versions 1-6, error correction M (falls back
+   to L for longer strings). Enough for a join URL, and keeps the app a single
+   offline file with no external image service.
+   Returns a square array of 0/1 rows.
+--------------------------------------------------------------------------- */
+function qrMatrix(text){
+  /* --- GF(256) --- */
+  const EXP=new Uint8Array(512),LOG=new Uint8Array(256);
+  for(let i=0,x=1;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&0x100)x^=0x11D;}
+  for(let i=255;i<512;i++)EXP[i]=EXP[i-255];
+  const mul=(a,b)=>(a===0||b===0)?0:EXP[LOG[a]+LOG[b]];
+  const genPoly=n=>{let p=[1];for(let i=0;i<n;i++){const q=[...p,0];for(let j=0;j<p.length;j++)q[j+1]^=mul(p[j],EXP[i]);p=q;}return p;};
+  const ecc=(data,n)=>{const g=genPoly(n),res=new Array(n).fill(0);
+    for(const d of data){const f=d^res[0];res.shift();res.push(0);
+      if(f)for(let i=0;i<n;i++)res[i]^=mul(g[i+1],f);}
+    return res;};
+
+  /* --- version tables: [ecPerBlock, blocks1, data1, blocks2, data2] --- */
+  const SPEC={
+    M:{1:[10,1,16,0,0],2:[16,1,28,0,0],3:[26,1,44,0,0],4:[18,2,32,0,0],5:[24,2,43,0,0],6:[16,4,27,0,0]},
+    L:{1:[7,1,19,0,0],2:[10,1,34,0,0],3:[15,1,55,0,0],4:[20,1,80,0,0],5:[26,1,108,0,0],6:[18,2,68,0,0]}
+  };
+  const CAP={M:{1:14,2:26,3:42,4:62,5:84,6:106},L:{1:17,2:32,3:53,4:78,5:106,6:134}};
+  const ALIGN={1:[],2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34]};
+  const ECBITS={L:1,M:0};
+
+  const bytes=[];
+  for(const ch of unescape(encodeURIComponent(text)))bytes.push(ch.charCodeAt(0)&0xFF);
+
+  let level=null,version=0;
+  for(const lv of ['M','L']){for(let v=1;v<=6;v++)if(bytes.length<=CAP[lv][v]){level=lv;version=v;break;}if(version)break;}
+  if(!version)return null;
+
+  const [ecN,b1,d1,b2,d2]=SPEC[level][version];
+  const totalData=b1*d1+b2*d2;
+
+  /* --- bitstream --- */
+  const bits=[];
+  const push=(val,len)=>{for(let i=len-1;i>=0;i--)bits.push((val>>i)&1);};
+  push(4,4);push(bytes.length,8);
+  for(const b of bytes)push(b,8);
+  for(let i=0;i<4&&bits.length<totalData*8;i++)bits.push(0);
+  while(bits.length%8)bits.push(0);
+  const codewords=[];
+  for(let i=0;i<bits.length;i+=8){let v=0;for(let j=0;j<8;j++)v=(v<<1)|bits[i+j];codewords.push(v);}
+  const PAD=[0xEC,0x11];let pi=0;
+  while(codewords.length<totalData)codewords.push(PAD[pi++%2]);
+
+  /* --- blocks + interleave --- */
+  const blocks=[],eccs=[];let off=0;
+  for(let i=0;i<b1;i++){blocks.push(codewords.slice(off,off+d1));off+=d1;}
+  for(let i=0;i<b2;i++){blocks.push(codewords.slice(off,off+d2));off+=d2;}
+  for(const b of blocks)eccs.push(ecc(b,ecN));
+  const out=[];
+  const maxD=Math.max(d1,d2||0);
+  for(let i=0;i<maxD;i++)for(const b of blocks)if(i<b.length)out.push(b[i]);
+  for(let i=0;i<ecN;i++)for(const e of eccs)out.push(e[i]);
+
+  /* --- module grid --- */
+  const size=version*4+17;
+  const M=Array.from({length:size},()=>new Array(size).fill(null));
+  const set=(r,c,v)=>{if(r>=0&&r<size&&c>=0&&c<size)M[r][c]=v;};
+  const finder=(r,c)=>{for(let i=-1;i<=7;i++)for(let j=-1;j<=7;j++){
+    const rr=r+i,cc=c+j;if(rr<0||rr>=size||cc<0||cc>=size)continue;
+    const on=(i>=0&&i<=6&&(j===0||j===6))||(j>=0&&j<=6&&(i===0||i===6))||(i>=2&&i<=4&&j>=2&&j<=4);
+    set(rr,cc,on?1:0);}};
+  finder(0,0);finder(0,size-7);finder(size-7,0);
+  for(let i=8;i<size-8;i++){const v=i%2===0?1:0;set(6,i,v);set(i,6,v);}
+  const ac=ALIGN[version];
+  for(const r of ac)for(const c of ac){
+    if((r<9&&c<9)||(r<9&&c>size-10)||(r>size-10&&c<9))continue;
+    for(let i=-2;i<=2;i++)for(let j=-2;j<=2;j++)
+      set(r+i,c+j,(Math.abs(i)===2||Math.abs(j)===2||(i===0&&j===0))?1:0);}
+  set(size-8,8,1); /* dark module */
+  /* reserve format areas */
+  const reserved=[];
+  for(let i=0;i<9;i++){reserved.push([8,i],[i,8]);}
+  for(let i=0;i<8;i++)reserved.push([8,size-1-i]);
+  for(let i=0;i<7;i++)reserved.push([size-1-i,8]);
+  for(const [r,c] of reserved)if(M[r][c]===null)M[r][c]=0;
+
+  /* --- place data --- */
+  const isFn=Array.from({length:size},()=>new Array(size).fill(false));
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++)isFn[r][c]=M[r][c]!==null;
+  let bi=0;const dataBits=[];
+  for(const cw of out)for(let i=7;i>=0;i--)dataBits.push((cw>>i)&1);
+  const remainder=version===1?0:7;
+  for(let i=0;i<remainder;i++)dataBits.push(0);
+  let up=true;
+  for(let c=size-1;c>=0;c-=2){
+    if(c===6)c--;
+    for(let k=0;k<size;k++){
+      const r=up?size-1-k:k;
+      for(let d=0;d<2;d++){
+        const cc=c-d;
+        if(isFn[r][cc])continue;
+        M[r][cc]=bi<dataBits.length?dataBits[bi++]:0;
+      }
+    }
+    up=!up;
+  }
+
+  /* --- masks --- */
+  const MASKS=[
+    (r,c)=>(r+c)%2===0,(r,c)=>r%2===0,(r,c)=>c%3===0,(r,c)=>(r+c)%3===0,
+    (r,c)=>(Math.floor(r/2)+Math.floor(c/3))%2===0,(r,c)=>((r*c)%2)+((r*c)%3)===0,
+    (r,c)=>(((r*c)%2)+((r*c)%3))%2===0,(r,c)=>(((r+c)%2)+((r*c)%3))%2===0
+  ];
+  const penalty=G=>{
+    let p=0;
+    for(let r=0;r<size;r++){let run=1;for(let c=1;c<size;c++){
+      if(G[r][c]===G[r][c-1])run++;else{if(run>=5)p+=3+(run-5);run=1;}}if(run>=5)p+=3+(run-5);}
+    for(let c=0;c<size;c++){let run=1;for(let r=1;r<size;r++){
+      if(G[r][c]===G[r-1][c])run++;else{if(run>=5)p+=3+(run-5);run=1;}}if(run>=5)p+=3+(run-5);}
+    for(let r=0;r<size-1;r++)for(let c=0;c<size-1;c++){
+      const v=G[r][c];if(v===G[r][c+1]&&v===G[r+1][c]&&v===G[r+1][c+1])p+=3;}
+    const pat=[1,0,1,1,1,0,1];
+    const hasPat=(arr,i)=>{for(let k=0;k<7;k++)if(arr[i+k]!==pat[k])return false;
+      const before=arr.slice(Math.max(0,i-4),i),after=arr.slice(i+7,i+11);
+      const okB=before.length>=4&&before.every(x=>x===0),okA=after.length>=4&&after.every(x=>x===0);
+      return okB||okA;};
+    for(let r=0;r<size;r++){const row=G[r];for(let c=0;c+7<=size;c++)if(hasPat(row,c))p+=40;}
+    for(let c=0;c<size;c++){const col=[];for(let r=0;r<size;r++)col.push(G[r][c]);
+      for(let r=0;r+7<=size;r++)if(hasPat(col,r))p+=40;}
+    let dark=0;for(let r=0;r<size;r++)for(let c=0;c<size;c++)dark+=G[r][c];
+    p+=Math.floor(Math.abs(dark*100/(size*size)-50)/5)*10;
+    return p;};
+
+  const fmtBits=(lv,mask)=>{
+    let d=(ECBITS[lv]<<3)|mask,v=d<<10;
+    for(let i=14;i>=10;i--)if((v>>i)&1)v^=0x537<<(i-10);
+    return ((d<<10)|v)^0x5412;};
+
+  let best=null;
+  for(let m=0;m<8;m++){
+    const G=M.map(row=>row.slice());
+    for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(!isFn[r][c]&&MASKS[m](r,c))G[r][c]^=1;
+    const f=fmtBits(level,m);
+    for(let i=0;i<15;i++){
+      const b=(f>>i)&1;
+      if(i<6)G[i][8]=b;else if(i<8)G[i+1][8]=b;else G[size-15+i][8]=b;
+    }
+    for(let i=0;i<15;i++){
+      const b=(f>>i)&1;
+      if(i<8)G[8][size-1-i]=b;else if(i<9)G[8][15-i-1+1]=b;else G[8][15-i-1]=b;
+    }
+    G[size-8][8]=1;
+    const p=penalty(G);
+    if(!best||p<best.p)best={p,G};
+  }
+  return best.G;
+}
 /* ---- geography: continent per country, plus rough centroids for the "how far apart" fact ---- */
 const CONT_STR={
  AF:'DZ AO BJ BW BF BI CM CV CF TD KM CD CG CI DJ EG GQ ER SZ ET GA GM GH GN GW KE LS LR LY MG MW ML MR MU MA MZ NA NE NG RW ST SN SC SL SO ZA SS SD TZ TG TN UG ZM ZW',
@@ -900,9 +1059,16 @@ function startStage(){
     }
     return out;
   }
+  /* Once the first person has answered everything, the stage stops telling
+     stories and shows only what this room has actually said. */
+  const someoneDone=()=>{const need=Math.max(1,activeCount());
+    for(const p of state.participants.values())if(p.answers.length>=need)return true;
+    return false;};
   function nextFact(){const card=$('factCard');card.classList.remove('in');
     setTimeout(()=>{factTick++;const rf=roomFacts();let f;
-      if(rf.length&&factTick%2===0){roomIdx=(roomIdx+1)%rf.length;const r=rf[roomIdx];f={tag:'THIS ROOM \u00B7 LIVE',e:r.e,t:r.t,s:'From your answers \u2014 totals only, never per person'};}
+      const roomOnly=rf.length&&someoneDone();
+      if(roomOnly){roomIdx=(roomIdx+1)%rf.length;const r=rf[roomIdx];f={e:r.e,t:r.t,s:'From your answers \u2014 totals only, never per person'};}
+      else if(rf.length&&factTick%2===0){roomIdx=(roomIdx+1)%rf.length;const r=rf[roomIdx];f={tag:'THIS ROOM \u00B7 LIVE',e:r.e,t:r.t,s:'From your answers \u2014 totals only, never per person'};}
       else if(factOrder.length){state.factIdx=(state.factIdx+1)%factOrder.length;f=FACTS[factOrder[state.factIdx]];}
       else if(rf.length){roomIdx=(roomIdx+1)%rf.length;const r=rf[roomIdx];f={e:r.e,t:r.t,s:'From your answers \u2014 totals only, never per person'};}
       else f={e:'\u{1F4E1}',t:'Waiting for answers to roll in\u2026',s:'Facts appear here as the room fills up'};
@@ -1488,7 +1654,15 @@ function startStage(){
     else if(m.type==='cmd'){state.hostSeen=true;$('drawer').classList.remove('open');if(m.name==='fullscreen'){toast('Press F on the stage window for full screen');return;}if(actions[m.name])actions[m.name](m.arg);refreshList();}
     else if(m.type==='host-hello'){state.hostSeen=true;$('drawer').classList.remove('open');$('gearBtn').classList.remove('show');refreshList();}
   });
-  if(NET.on){$('roomHint').innerHTML=`Join on your phone:<br><b style="color:var(--ink)">${joinLink().replace(/^https?:\/\//,'')}</b>`;
+  /* the join QR: drawn once from whatever address this page is actually served from */
+  (function drawQR(){
+    const box=$('qrBox');if(!box||!NET.on)return;
+    const m=qrMatrix(joinLink());if(!m)return;
+    const n=m.length;let path='';
+    for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(m[r][c])path+=`M${c} ${r}h1v1h-1z`;
+    box.innerHTML=`<svg viewBox="0 0 ${n} ${n}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="Scan to join"><path d="${path}" fill="#111"/></svg>`;
+  })();
+  if(NET.on){$('roomHint').innerHTML=`Scan to join, or type:<br><b style="color:var(--ink)">${joinLink().replace(/^https?:\/\//,'')}</b>`;
     setInterval(()=>{fetch(`${NET.url}/rooms/${roomCode}/msgs.json?orderBy=%22ts%22&endAt=${Date.now()-150000}&limitToFirst=150`).then(r=>r.json()).then(o=>{if(o)for(const k in o)fetch(`${NET.url}/rooms/${roomCode}/msgs/${k}.json`,{method:'DELETE'}).catch(()=>{});}).catch(()=>{});},60000);}
   addEventListener('resize',resize);resize();document.body.classList.toggle('photo',state.view==='photo');
   requestAnimationFrame(frame);
