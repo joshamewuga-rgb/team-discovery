@@ -21,7 +21,7 @@ button.primary{background:var(--yellow);color:#1B1F24;font-weight:600}
 button.primary:hover{background:#ffd633}
 button.danger{background:rgba(212,5,17,.18);color:#ff8a92}
 button:disabled{opacity:.4;cursor:default}
-select,input[type=range],input[type=text]{font:inherit}
+select,input[type=range],input[type=text],input[type=number]{font:inherit}
 .hidden{display:none!important}
 
 /* ---------- STAGE ---------- */
@@ -142,7 +142,9 @@ body.host .plist{max-height:none}
 .pbody button.primary{background:#1B1F24;color:#fff;border-color:#1B1F24;text-align:center;font-weight:600;margin-top:16px}
 .pbody button.primary:hover{background:#2b3138}
 .pbody button.primary:disabled{opacity:.35}
-.pbody input[type=text]{width:100%;font-size:20px;padding:16px 18px;border:1.5px solid #E1E0DA;border-radius:14px;background:#fff}
+.pbody input[type=text],.pbody input[type=number]{width:100%;font-size:20px;padding:16px 18px;border:1.5px solid #E1E0DA;border-radius:14px;background:#fff}
+#yrs{font-size:40px;font-weight:600;text-align:center;padding:22px 18px;letter-spacing:.5px;-moz-appearance:textfield}
+#yrs::-webkit-outer-spin-button,#yrs::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:8px 0 6px}
 .grid button{aspect-ratio:1;display:grid;place-items:center;font-size:34px;padding:0;margin:0;min-height:0;border-radius:16px}
 .grid button.taken{opacity:.22;cursor:default;filter:grayscale(1)}
@@ -267,7 +269,7 @@ const flagOf=c=>String.fromCodePoint(...[...c].map(ch=>0x1F1A5+ch.charCodeAt(0))
 let _regionNames=null;try{_regionNames=new Intl.DisplayNames(['en'],{type:'region'});}catch(e){}
 const countryName=c=>{try{return (_regionNames&&_regionNames.of(c))||c;}catch(e){return c;}};
 const COUNTRIES=COUNTRY_CODES.map(c=>({c,n:countryName(c)})).sort((a,b)=>a.n.localeCompare(b.n));
-const LANGS=['English','French','Dutch','German','Spanish','Portuguese','Italian','Arabic','Swahili','Twi','Fante','Ga','Ewe','Hausa','Yoruba','Igbo','Pidgin','Wolof','Bambara','Amharic','Oromo','Somali','Zulu','Xhosa','Afrikaans','Sesotho','Setswana','Shona','Ndebele','Chewa','Bemba','Lingala','Kikongo','Kinyarwanda','Kirundi','Luganda','Luo','Kikuyu','Kamba','Dagbani','Krio','Malagasy','Hindi','Urdu','Tamil','Mandarin','Cantonese','Turkish','Polish','Romanian','Russian','Ukrainian','Greek','Tagalog'];
+const LANGS=['English','French','Dutch','German','Spanish','Portuguese','Italian','Arabic','Mandarin','Cantonese','Hindi','Urdu','Tamil','Swahili','Turkish','Polish','Romanian','Russian','Ukrainian','Greek','Tagalog','Japanese','Korean'];
 const QUESTIONS=[
  {id:'roots',type:'country',q:'Where are your roots?',sub:'The country you call home — or the one your family does.'},
  {id:'langs',type:'langs',q:'Which languages do you speak?',sub:'Tap all that apply. Add any that are missing — local languages very welcome.'},
