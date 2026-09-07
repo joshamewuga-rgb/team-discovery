@@ -206,7 +206,7 @@ body.host .plist{max-height:none}
     <button class="close" id="closeDrawer" aria-label="Close">✕</button>
     <h2>Facilitator</h2>
     <div class="sub">Room <span id="dRoom"></span> · <span id="dCount">0</span> joined · <span id="dPhase">Gathering</span></div>
-    <div class="hstat hidden" id="hstat">Looking for the stage… open the stage file in another tab first.</div>
+    <div class="hstat hidden" id="hstat">Looking for the stage… press “Open stage window” below and keep it open.</div>
     <h3>Session</h3>
     <div class="row"><button class="primary" id="btnStart">Start session</button><button id="btnStats">Hide stats</button></div>
     <div class="row" style="margin-top:8px"><button id="btnHost">Open control window</button><button id="btnParticipant">Open participant view</button></div>
@@ -434,7 +434,7 @@ function narrate(team,profiles,w,challenge,ctx){
 /* =====================================================================
    APP  (stage + facilitator + participant, synced across tabs)
    ===================================================================== */
-let mode=location.hash.startsWith('#join')?'join':location.hash.startsWith('#host')?'host':null;
+let mode=location.hash.startsWith('#join')?'join':(location.hash.startsWith('#host')||location.hash.startsWith('#panel'))?'host':location.hash.startsWith('#stage')?'stage':null;
 const FAC_HASH=2039104848037370; // hash of the facilitator password — not stored in clear
 function h53(str,seed=0){let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507);h1^=Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507);h2^=Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0);}
 const facAuthed=()=>sessionStorage.getItem('dtd-fac')==='1';
@@ -488,9 +488,22 @@ function showLanding(next){
   const pw=document.getElementById('pwBox'),inp=document.getElementById('pwInput'),err=document.getElementById('pwErr');
   document.getElementById('goParticipant').onclick=()=>{L.classList.add('hidden');boot('join');};
   const askPw=()=>{pw.classList.add('show');inp.focus();};
-  document.getElementById('goFacilitator').onclick=()=>{if(facAuthed()){L.classList.add('hidden');boot(next||'stage');}else askPw();};
-  pw.onsubmit=e=>{e.preventDefault();if(h53(inp.value,7)===FAC_HASH){sessionStorage.setItem('dtd-fac','1');L.classList.add('hidden');boot(next||'stage');}else{inp.value='';inp.classList.remove('bad');void inp.offsetWidth;inp.classList.add('bad');err.textContent='That password is not right.';inp.focus();}};
+  /* After the password: boot straight to the requested view, or offer the two facilitator surfaces. */
+  const afterAuth=()=>{ if(next==='host'||next==='stage'){L.classList.add('hidden');boot(next);} else facChoice(); };
+  const facChoice=()=>{
+    pw.classList.remove('show');
+    document.querySelector('.landing p').textContent='Two windows, two jobs. Share only the stage \u2014 the controls stay on your own screen.';
+    const gp=document.getElementById('goParticipant'),gf=document.getElementById('goFacilitator');
+    gp.classList.remove('hidden');
+    gp.innerHTML='<b>\uD83D\uDDA5\uFE0F Stage</b><span>The clean big-screen view you project or share. No controls visible \u2014 ever.</span>';
+    gp.onclick=()=>{L.classList.add('hidden');boot('stage');};
+    gf.innerHTML='<b>\uD83C\uDF9B\uFE0F Control panel</b><span>Start, reveal, add sims, kick \u2014 keep this window on your own screen.</span>';
+    gf.onclick=()=>{L.classList.add('hidden');boot('host');};
+  };
+  document.getElementById('goFacilitator').onclick=()=>{if(facAuthed())afterAuth();else askPw();};
+  pw.onsubmit=e=>{e.preventDefault();if(h53(inp.value,7)===FAC_HASH){sessionStorage.setItem('dtd-fac','1');afterAuth();}else{inp.value='';inp.classList.remove('bad');void inp.offsetWidth;inp.classList.add('bad');err.textContent='That password is not right.';inp.focus();}};
   if(next==='host'){document.querySelector('.landing p').textContent='Enter the facilitator password to open the control panel.';document.getElementById('goParticipant').classList.add('hidden');askPw();}
+  if(next==='stage'){document.querySelector('.landing p').textContent='Enter the facilitator password to open the stage.';document.getElementById('goParticipant').classList.add('hidden');askPw();}
 }
 function boot(m){mode=m;document.getElementById('stage').classList.remove('hidden');if(m==='join')startParticipant();else if(m==='host')startHost();else startStage();}
 
@@ -1194,9 +1207,10 @@ function startStage(){
   function refreshList(){const st=status();renderStatus(st);send('status',st);}
   setInterval(refreshList,1000);
   // the gear only shows while the mouse is moving, so a projected stage stays clean
-  let gearT;addEventListener('mousemove',()=>{if(state.hostSeen)return;$('gearBtn').classList.add('show');clearTimeout(gearT);gearT=setTimeout(()=>$('gearBtn').classList.remove('show'),2500);});
-  $('gearBtn').onclick=()=>$('drawer').classList.add('open');$('closeDrawer').onclick=()=>$('drawer').classList.remove('open');
-  addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(e.key==='Escape')$('drawer').classList.remove('open');if(e.key==='r'||e.key==='R')reveal();if(e.key==='f'||e.key==='F')actions.fullscreen();if(e.key==='s'||e.key==='S')$('drawer').classList.toggle('open');});
+  /* Clean stage: the gear and drawer never appear here \u2014 all controls live in the separate control panel. */
+  $('gearBtn').style.display='none';
+  $('closeDrawer').onclick=()=>$('drawer').classList.remove('open');
+  addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(e.key==='Escape')$('drawer').classList.remove('open');if(e.key==='r'||e.key==='R')reveal();if(e.key==='f'||e.key==='F')actions.fullscreen();});
   $('roomCode').textContent=roomCode;
 
   /* ----- channel: real participants in other tabs ----- */
@@ -1230,9 +1244,10 @@ function startHost(){
   $('drawer').classList.add('open');$('hstat').classList.remove('hidden');
   let seen=false,lastSeen=0;
   wireControls((name,arg)=>{if(name==='fullscreen'){$('hstat').textContent='Full screen has to be pressed on the stage itself: click the stage window and press F.';$('hstat').classList.remove('hidden');return;}send('cmd',{name,arg});});
+  $('btnHost').style.display='inline-block';$('btnHost').textContent='Open stage window';$('btnHost').onclick=()=>window.open(location.href.split('#')[0]+'#stage&room='+roomCode,'_blank');
   $('btnFull').textContent='Full screen (press F on the stage)';
   bus.addEventListener('message',ev=>{const m=ev.data;if(!m||m.type!=='status')return;seen=true;lastSeen=Date.now();$('hstat').classList.add('hidden');renderStatus(m);});
-  send('host-hello',{});setInterval(()=>{if(!seen||Date.now()-lastSeen>3500){$('hstat').textContent='Looking for the stage… open this file in another tab, choose Facilitator, and keep it open.';$('hstat').classList.remove('hidden');send('host-hello',{});}},2000);
+  send('host-hello',{});setInterval(()=>{if(!seen||Date.now()-lastSeen>3500){$('hstat').textContent='Looking for the stage… press “Open stage window” below (or open the app elsewhere and choose Stage), and keep that window open.';$('hstat').classList.remove('hidden');send('host-hello',{});}},2000);
 }
 
 /* ---------------------------- PARTICIPANT ---------------------------- */
@@ -1313,6 +1328,7 @@ function startParticipant(){
 /* ---------------------------- ENTRY ---------------------------- */
 if(mode==='join')boot('join');
 else if(mode==='host'){if(facAuthed())boot('host');else showLanding('host');}
+else if(mode==='stage'){if(facAuthed())boot('stage');else showLanding('stage');}
 else showLanding(null);
 </script>
 </body>
